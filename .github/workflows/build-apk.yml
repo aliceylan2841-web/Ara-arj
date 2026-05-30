@@ -27,6 +27,7 @@ jobs:
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
 
+    # Android lisanslarını bulut sunucusunda otomatik onaylıyoruz
     - name: Accept Android Licenses
       run: |
         yes | sdkmanager --licenses || true
@@ -45,10 +46,10 @@ jobs:
         # Config dosyasını oluşturuyoruz
         npx cap init "Acamay EV Pro" "com.aliarslan.acamayevpro" --web-dir=www
 
-    # Sürüm hatası veren Bluetooth eklentisini Capacitor 5 ile uyumlu en kararlı ana sürüme bırakarak kuruyoruz
+    # Nokta atışı tam sürüm belirterek ve --save-exact takısını kaldırarak eklentiyi kuruyoruz
     - name: Install Bluetooth Plugin
       run: |
-        npm install @capacitor-community/bluetooth-le@5 --save-exact
+        npm install @capacitor-community/bluetooth-le@5.0.1
 
     - name: Add Android Platform
       run: npx cap add android

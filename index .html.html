@@ -1,0 +1,1222 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#030b14">
+<title>Acamay EV Şarj</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#030b14;--sf:#091628;--card:#0c1c2e;--card2:#101f30;
+  --b1:#162438;--b2:#1c2e44;
+  --teal:#00c8a0;--teal2:#00f0b8;--tealg:rgba(0,200,160,.12);
+  --blue:#0096e6;--blueg:rgba(0,150,230,.1);
+  --warn:#f5a623;--warnl:rgba(245,166,35,.12);
+  --danger:#ff3860;--dangerl:rgba(255,56,96,.1);
+  --purple:#7c6fff;
+  --text:#cce4f4;--text2:#88aec4;--text3:#3d6888;
+  --shadow:rgba(0,0,0,.5);
+  --nh:62px;--th:58px;
+}
+.light{
+  --bg:#eef2f7;--sf:#ffffff;--card:#ffffff;--card2:#f5f8fc;
+  --b1:#dde6ef;--b2:#c5d5e5;
+  --teal:#007a62;--teal2:#009976;--tealg:rgba(0,153,118,.1);
+  --blue:#005fa3;--blueg:rgba(0,95,163,.07);
+  --warn:#b86800;--warnl:rgba(184,104,0,.1);
+  --danger:#b5002e;--dangerl:rgba(181,0,46,.08);
+  --text:#0e2030;--text2:#3a5870;--text3:#8aaabf;
+  --shadow:rgba(0,0,0,.1);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'Rajdhani',sans-serif;background:var(--bg);color:var(--text);transition:background .3s,color .3s}
+input,textarea{-webkit-user-select:text;user-select:text}
+#bgc{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.2}
+.light #bgc{opacity:.07}
+.app{position:relative;z-index:1;width:100%;height:100%;display:flex;flex-direction:column;max-width:430px;margin:0 auto}
+
+/* TOPBAR */
+.topbar{height:var(--th);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 14px;background:var(--card);border-bottom:1px solid var(--b1);z-index:40;box-shadow:0 2px 14px var(--shadow);transition:background .3s}
+.logo{display:flex;align-items:center;gap:9px}
+.logo-icon{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#00b890,#0088d4);display:flex;align-items:center;justify-content:center;box-shadow:0 0 16px rgba(0,184,144,.35);flex-shrink:0}
+.logo-icon svg{width:20px;height:20px}
+.logo-name{font-family:'Orbitron',monospace;font-size:.88rem;font-weight:900;letter-spacing:1px;background:linear-gradient(90deg,var(--teal2),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.logo-by{font-size:.48rem;color:var(--text3);letter-spacing:3px;text-transform:uppercase;font-family:'JetBrains Mono',monospace;margin-top:1px}
+.topbar-right{display:flex;align-items:center;gap:6px}
+.conn-btn{display:flex;align-items:center;gap:4px;padding:5px 9px;border-radius:16px;border:1px solid var(--b2);background:var(--sf);cursor:pointer;transition:all .25s;font-family:'JetBrains Mono',monospace;font-size:.58rem;font-weight:700;color:var(--text3)}
+.conn-btn.wifi-on{border-color:rgba(0,200,160,.3);color:var(--teal);background:var(--tealg)}
+.conn-btn.bt-on{border-color:rgba(124,111,255,.3);color:var(--purple);background:rgba(124,111,255,.1)}
+.c-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
+.c-dot.pulse{animation:blink 2s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.theme-btn{width:32px;height:32px;border-radius:50%;border:1px solid var(--b2);background:var(--sf);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.95rem;flex-shrink:0}
+
+/* PAGES */
+.pages{flex:1;overflow:hidden;position:relative}
+.page{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding:13px 12px 72px;opacity:0;transform:translateX(22px);transition:opacity .26s,transform .26s;pointer-events:none;-webkit-overflow-scrolling:touch}
+.page.active{opacity:1;transform:translateX(0);pointer-events:all}
+.page::-webkit-scrollbar{width:2px}
+.page::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px}
+
+/* NAV */
+.nav{height:var(--nh);flex-shrink:0;display:flex;align-items:stretch;background:var(--card);border-top:1px solid var(--b1);z-index:40;box-shadow:0 -2px 14px var(--shadow);transition:background .3s;padding-bottom:env(safe-area-inset-bottom,0)}
+.ni{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:none;background:none;cursor:pointer;color:var(--text3);transition:all .2s;padding:5px 0;font-family:'Rajdhani',sans-serif;font-size:.58rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+.ni.active{color:var(--teal)}
+.ni.active .ni-ico{filter:drop-shadow(0 0 5px var(--teal))}
+.ni-ico{font-size:1.25rem;line-height:1}
+.ni:active .ni-ico{transform:scale(.8)}
+
+/* CARD */
+.card{background:var(--card);border:1px solid var(--b1);border-radius:20px;padding:14px 13px;margin-bottom:10px;position:relative;overflow:hidden;box-shadow:0 2px 12px var(--shadow);transition:background .3s}
+.card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,200,160,.025),transparent 55%);pointer-events:none}
+.sec-title{font-size:.55rem;color:var(--text3);letter-spacing:2.5px;text-transform:uppercase;font-family:'JetBrains Mono',monospace;display:flex;align-items:center;gap:9px;margin:14px 0 9px}
+.sec-title::after{content:'';flex:1;height:1px;background:var(--b1)}
+
+/* STATUS BADGE */
+.sbadge{padding:5px 11px;border-radius:16px;font-size:.58rem;font-weight:700;letter-spacing:1px;font-family:'JetBrains Mono',monospace;transition:all .4s;white-space:nowrap}
+.s-idle{background:var(--sf);border:1px solid var(--b2);color:var(--text3)}
+.s-charging{background:var(--tealg);border:1px solid rgba(0,200,160,.35);color:var(--teal2);animation:pb 2s ease-in-out infinite}
+.s-done{background:var(--blueg);border:1px solid rgba(0,150,230,.35);color:var(--blue)}
+.s-paused{background:var(--warnl);border:1px solid rgba(245,166,35,.35);color:var(--warn)}
+.s-fault{background:var(--dangerl);border:1px solid rgba(255,56,96,.35);color:var(--danger);animation:pb .8s ease-in-out infinite}
+@keyframes pb{0%,100%{opacity:1}50%{opacity:.5}}
+
+/* CLOCK */
+.clock-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.clock-time{font-family:'Orbitron',monospace;font-size:1.15rem;font-weight:700;color:var(--teal2);letter-spacing:2px}
+.clock-date{font-size:.58rem;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-top:3px}
+
+/* SOC RING */
+.soc-section{display:flex;flex-direction:column;align-items:center;margin-bottom:13px}
+.ring-wrap{position:relative;width:160px;height:160px}
+.ring-svg{width:160px;height:160px;transform:rotate(-90deg)}
+.r-track{fill:none;stroke:var(--b2);stroke-width:10}
+.r-target{fill:none;stroke:rgba(0,200,160,.18);stroke-width:10;stroke-linecap:round;stroke-dasharray:452;stroke-dashoffset:90;transition:stroke-dashoffset 1s}
+.r-fill{fill:none;stroke:#00f0b8;stroke-width:10;stroke-linecap:round;stroke-dasharray:452;stroke-dashoffset:384;transition:stroke-dashoffset 1.4s cubic-bezier(.4,0,.2,1),stroke .5s;filter:drop-shadow(0 0 7px rgba(0,240,184,.5))}
+.ring-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;width:120px}
+.r-pct{font-family:'Orbitron',monospace;font-size:2rem;font-weight:900;line-height:1;margin-bottom:2px}
+.r-lbl{font-size:.5rem;color:var(--text3);letter-spacing:2px;text-transform:uppercase;font-family:'JetBrains Mono',monospace}
+.r-kwh{font-family:'JetBrains Mono',monospace;font-size:.68rem;font-weight:700;margin-top:5px;color:var(--text2)}
+.timer-row{display:flex;gap:7px;margin-top:10px;width:100%;justify-content:center}
+.timer-box{flex:1;max-width:140px;display:flex;flex-direction:column;align-items:center;background:var(--sf);border:1px solid var(--b1);border-radius:13px;padding:8px 11px;transition:background .3s}
+.t-lbl{font-size:.47rem;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;font-family:'JetBrains Mono',monospace;margin-bottom:4px}
+.t-val{font-family:'Orbitron',monospace;font-size:.85rem;font-weight:700;color:var(--teal)}
+.t-val.blue{color:var(--blue)}
+
+/* DEV STATUS */
+.dev-row{display:flex;align-items:center;gap:10px;background:var(--sf);border:1px solid var(--b1);border-radius:13px;padding:10px 13px;margin-bottom:10px;transition:background .3s}
+.dev-ico{font-size:1.3rem;flex-shrink:0}
+.dev-info{flex:1;min-width:0}
+.dev-title{font-size:.82rem;font-weight:700;margin-bottom:2px}
+.dev-sub{font-size:.56rem;color:var(--text3);font-family:'JetBrains Mono',monospace}
+.dev-right{text-align:right;flex-shrink:0}
+.dev-state{font-family:'JetBrains Mono',monospace;font-size:.72rem;font-weight:700;color:var(--teal)}
+.dev-fw{font-size:.5rem;color:var(--text3);margin-top:2px;font-family:'JetBrains Mono',monospace}
+
+/* TRIFAZE */
+.tf-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:10px}
+.tf-box{background:var(--sf);border:1px solid var(--b1);border-radius:12px;padding:8px 6px;text-align:center;transition:background .3s}
+.tf-lbl{font-size:.48rem;color:var(--text3);letter-spacing:1px;text-transform:uppercase;font-family:'JetBrains Mono',monospace}
+.tf-val{font-family:'JetBrains Mono',monospace;font-size:.82rem;font-weight:700;margin-top:4px;color:var(--blue)}
+.tf-val.live{color:var(--teal2)}
+.tf-unit{font-size:.44rem;color:var(--text3);margin-top:1px;font-family:'JetBrains Mono',monospace}
+
+/* METRICS */
+.m-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:10px}
+.m-box{background:var(--sf);border:1px solid var(--b1);border-radius:12px;padding:9px 6px;text-align:center;transition:background .3s}
+.m-lbl{font-size:.48rem;color:var(--text3);letter-spacing:1px;text-transform:uppercase;font-family:'JetBrains Mono',monospace}
+.m-val{font-family:'Orbitron',monospace;font-size:.9rem;font-weight:700;margin-top:5px}
+.m-unit{font-size:.46rem;color:var(--text3);margin-top:1px;font-family:'JetBrains Mono',monospace}
+.c-t{color:var(--teal)}.c-b{color:var(--blue)}.c-w{color:var(--warn)}
+
+/* AMP CARD */
+.amp-card{background:var(--card);border:1px solid var(--b1);border-radius:18px;padding:14px;margin-bottom:10px;box-shadow:0 2px 10px var(--shadow);transition:background .3s}
+.amp-hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:9px}
+.amp-lbl{font-size:.55rem;color:var(--text3);letter-spacing:2px;text-transform:uppercase;font-family:'JetBrains Mono',monospace}
+.amp-formula{font-size:.54rem;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-bottom:2px;text-align:right}
+.amp-big{font-family:'Orbitron',monospace;font-size:1.3rem;font-weight:700;color:var(--teal2);text-align:right}
+.amp-big .u{font-size:.68rem;font-weight:400;color:var(--text3);margin-left:2px}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:6px;outline:none;cursor:pointer;background:linear-gradient(90deg,var(--teal) var(--pct,50%),var(--b2) var(--pct,50%));transition:background .1s;margin:4px 0}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:var(--teal2);border:3px solid var(--bg);box-shadow:0 0 8px rgba(0,200,160,.55);cursor:pointer;transition:transform .2s}
+input[type=range]:active::-webkit-slider-thumb{transform:scale(1.2)}
+.light input[type=range]::-webkit-slider-thumb{border-color:var(--sf)}
+.amp-marks{display:flex;justify-content:space-between;margin-top:5px}
+.a-mark{font-size:.48rem;color:var(--text3);font-family:'JetBrains Mono',monospace}
+.presets{display:flex;gap:6px;margin-top:10px}
+.pr{flex:1;padding:7px 3px;border-radius:10px;border:1px solid var(--b1);background:var(--sf);color:var(--text3);font-size:.62rem;font-weight:700;cursor:pointer;transition:all .2s;font-family:'JetBrains Mono',monospace;text-align:center;line-height:1.5}
+.pr span{display:block;font-size:.44rem;color:var(--text3);margin-top:1px}
+.pr.active{background:var(--tealg);border-color:rgba(0,200,160,.4);color:var(--teal)}
+.pr:active{transform:scale(.92)}
+
+/* COST */
+.cost-row{display:flex;align-items:center;justify-content:space-between;background:var(--sf);border:1px solid rgba(245,166,35,.22);border-radius:14px;padding:11px 14px;margin-bottom:10px;box-shadow:0 2px 8px var(--shadow);transition:background .3s}
+.cost-lbl{font-size:.5rem;color:var(--text3);letter-spacing:1px;font-family:'JetBrains Mono',monospace;margin-bottom:3px;text-transform:uppercase}
+.cost-num{font-family:'Orbitron',monospace;font-size:1.55rem;font-weight:700;color:var(--warn)}
+.cost-num .u{font-size:.82rem;font-weight:400;color:var(--text3);margin-left:2px}
+.price-lbl{font-size:.5rem;color:var(--text3);letter-spacing:1px;font-family:'JetBrains Mono',monospace;margin-bottom:4px;text-transform:uppercase;text-align:right}
+.price-in{background:var(--card);border:1px solid var(--b1);color:var(--warn);border-radius:9px;padding:6px 9px;width:76px;text-align:right;font-family:'Orbitron',monospace;font-size:.76rem;outline:none}
+
+/* CTRL BTNS */
+.ctrl-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ctrl-btn{padding:16px 8px;border:none;border-radius:16px;font-family:'Orbitron',monospace;font-size:.7rem;font-weight:700;letter-spacing:.5px;cursor:pointer;transition:all .22s;display:flex;align-items:center;justify-content:center;gap:6px;position:relative;overflow:hidden}
+.ctrl-btn::after{content:'';position:absolute;inset:0;background:white;opacity:0;transition:.18s;border-radius:inherit}
+.ctrl-btn:active::after{opacity:.07}
+.ctrl-btn:active{transform:scale(.96)}
+.btn-start{background:linear-gradient(135deg,#00a87a,#007ec8);color:#030b14;box-shadow:0 4px 16px rgba(0,168,122,.3)}
+.btn-start:hover{box-shadow:0 6px 22px rgba(0,168,122,.44)}
+.btn-stop{background:var(--dangerl);border:1px solid rgba(255,56,96,.28);color:var(--danger)}
+.ctrl-btn:disabled{opacity:.38;cursor:not-allowed;transform:none}
+.sp{width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:white;border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0}
+.btn-stop .sp{border-color:rgba(255,56,96,.3);border-top-color:var(--danger)}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* SCHEDULE */
+.time-card{background:var(--card);border:1px solid var(--b1);border-radius:18px;padding:14px;margin-bottom:10px;box-shadow:0 2px 10px var(--shadow);transition:background .3s}
+.time-row{display:flex;align-items:center;gap:7px;margin-bottom:11px}
+.tl{font-size:.54rem;color:var(--text3);letter-spacing:1px;text-transform:uppercase;font-family:'JetBrains Mono',monospace;white-space:nowrap}
+.t-in{flex:1;background:var(--sf);border:1px solid var(--b1);color:var(--text);border-radius:10px;padding:9px 8px;font-family:'Orbitron',monospace;font-size:.78rem;outline:none;text-align:center;color-scheme:dark}
+.light .t-in{color-scheme:light}
+.t-in:focus{border-color:rgba(0,200,160,.42)}
+.t-sep{color:var(--text3);font-size:1rem;font-weight:700}
+.tgt-row{display:flex;align-items:center;gap:9px;margin-bottom:11px}
+.tgt-v{font-family:'Orbitron',monospace;font-size:.9rem;font-weight:700;color:var(--teal2);min-width:36px;text-align:right;flex-shrink:0}
+.days-row{display:flex;gap:5px;margin-bottom:12px}
+.db{flex:1;padding:7px 2px;border-radius:9px;border:1px solid var(--b1);background:var(--sf);color:var(--text3);font-size:.58rem;font-weight:700;cursor:pointer;transition:all .2s;font-family:'Rajdhani',sans-serif;text-transform:uppercase}
+.db.active{background:var(--tealg);border-color:rgba(0,200,160,.35);color:var(--teal)}
+.add-btn{width:100%;padding:11px;border:1px dashed rgba(0,200,160,.3);border-radius:13px;background:rgba(0,200,160,.04);color:var(--teal);font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.8rem;cursor:pointer;transition:all .25s}
+.sch-item{background:var(--sf);border:1px solid var(--b1);border-radius:13px;padding:11px 13px;margin-bottom:7px;display:flex;align-items:center;justify-content:space-between;transition:background .3s}
+.sch-time{font-family:'Orbitron',monospace;font-size:.82rem;font-weight:700;color:var(--teal);margin-bottom:2px}
+.sch-days{font-size:.55rem;color:var(--text3);font-family:'JetBrains Mono',monospace}
+.del-btn{background:var(--dangerl);border:1px solid rgba(255,56,96,.22);color:var(--danger);border-radius:9px;padding:6px 10px;cursor:pointer;font-size:.62rem;font-family:'Rajdhani',sans-serif;font-weight:700}
+.tog{position:relative;width:38px;height:22px;flex-shrink:0}
+.tog input{opacity:0;width:0;height:0}
+.tog-sl{position:absolute;inset:0;background:var(--sf);border:1px solid var(--b2);border-radius:22px;cursor:pointer;transition:all .3s}
+.tog-sl::before{content:'';position:absolute;width:14px;height:14px;left:3px;top:3px;background:var(--text3);border-radius:50%;transition:all .3s}
+.tog input:checked+.tog-sl{background:var(--tealg);border-color:rgba(0,200,160,.42)}
+.tog input:checked+.tog-sl::before{transform:translateX(16px);background:var(--teal2);box-shadow:0 0 6px rgba(0,200,160,.6)}
+
+/* HISTORY */
+.hf{display:flex;gap:6px;margin-bottom:9px}
+.hfb{flex:1;padding:8px 5px;border-radius:10px;border:1px solid var(--b1);background:var(--sf);color:var(--text3);font-size:.62rem;font-weight:700;cursor:pointer;font-family:'Rajdhani',sans-serif}
+.hfb.active{background:var(--tealg);border-color:rgba(0,200,160,.35);color:var(--teal)}
+.mnav{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px}
+.mnav-btn{background:var(--sf);border:1px solid var(--b1);color:var(--text2);border-radius:9px;padding:6px 12px;cursor:pointer;font-size:.85rem}
+.month-t{font-family:'Orbitron',monospace;font-size:.72rem;font-weight:700;color:var(--teal)}
+.chart-sc{overflow-x:auto;padding-bottom:4px;margin-bottom:8px}
+.day-chart{display:flex;align-items:flex-end;gap:4px;height:72px;width:max-content;min-width:100%}
+.dc-col{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:22px;cursor:pointer}
+.dc-bar{width:14px;border-radius:4px 4px 0 0;background:linear-gradient(180deg,var(--teal),rgba(0,200,160,.15));transition:height .65s ease}
+.dc-lbl{font-size:.44rem;color:var(--text3);font-family:'JetBrains Mono',monospace}
+.chart-sum{display:flex;gap:14px;padding-top:8px;border-top:1px solid var(--b1)}
+.cs-item .cs-lbl{font-size:.5rem;color:var(--text3);letter-spacing:1px;text-transform:uppercase;font-family:'JetBrains Mono',monospace}
+.cs-item .cs-val{font-family:'Orbitron',monospace;font-size:.84rem;font-weight:700;color:var(--teal);margin-top:2px}
+.cs-item .cs-val.w{color:var(--warn)}
+.hist-item{background:var(--card);border:1px solid var(--b1);border-radius:14px;padding:12px 13px;margin-bottom:7px;display:flex;align-items:center;gap:11px;transition:all .25s}
+.h-ico{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0}
+.hi-c{background:var(--tealg);border:1px solid rgba(0,200,160,.22)}
+.hi-s{background:var(--blueg);border:1px solid rgba(0,150,230,.22)}
+.hi-x{background:var(--dangerl);border:1px solid rgba(255,56,96,.22)}
+.h-body{flex:1;min-width:0}
+.h-title{font-size:.82rem;font-weight:700;margin-bottom:2px}
+.h-sub{font-size:.58rem;color:var(--text3);font-family:'JetBrains Mono',monospace}
+.h-meta{text-align:right;flex-shrink:0}
+.h-kwh{font-family:'Orbitron',monospace;font-size:.8rem;font-weight:700;color:var(--teal2)}
+.h-cost{font-size:.58rem;color:var(--warn);margin-top:2px;font-family:'JetBrains Mono',monospace}
+
+/* MAIL */
+.mail-card{background:var(--card);border:1px solid var(--b1);border-radius:18px;padding:14px;margin-bottom:10px;box-shadow:0 2px 10px var(--shadow);transition:background .3s}
+.auto-row{display:flex;align-items:center;justify-content:space-between;background:var(--sf);border:1px solid var(--b1);border-radius:11px;padding:10px 12px;margin-bottom:7px;transition:background .3s}
+.a-t{font-size:.8rem;font-weight:700}
+.a-s{font-size:.54rem;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-top:2px}
+.mail-row{display:flex;gap:7px;margin-bottom:9px;align-items:center}
+.mail-in{flex:1;background:var(--sf);border:1px solid var(--b1);color:var(--text);border-radius:10px;padding:9px 11px;font-family:'Rajdhani',sans-serif;font-size:.8rem;outline:none}
+.mail-in::placeholder{color:var(--text3)}
+.mail-btn{padding:9px 13px;border:none;border-radius:10px;background:linear-gradient(135deg,var(--teal),var(--blue));color:#030b14;font-family:'Orbitron',monospace;font-size:.6rem;font-weight:700;cursor:pointer;white-space:nowrap}
+.exp-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.eg{padding:10px;border-radius:12px;border:1px solid var(--b1);background:var(--sf);color:var(--text);font-family:'Rajdhani',sans-serif;font-size:.76rem;font-weight:700;cursor:pointer;text-align:center}
+.eg .ei{font-size:1.05rem;display:block;margin-bottom:4px}
+
+/* SETTINGS */
+.set-card{background:var(--card);border:1px solid var(--b1);border-radius:18px;overflow:hidden;margin-bottom:10px;box-shadow:0 2px 10px var(--shadow);transition:background .3s}
+.set-row{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--b1);gap:10px;transition:background .2s}
+.set-row:last-child{border-bottom:none}
+.s-lbl{font-size:.82rem;font-weight:700}
+.s-hint{font-size:.54rem;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-top:2px;line-height:1.5}
+.s-in{background:var(--sf);border:1px solid var(--b1);color:var(--text);border-radius:10px;padding:7px 10px;width:130px;text-align:right;font-family:'JetBrains Mono',monospace;font-size:.72rem;outline:none;transition:border-color .3s}
+.s-in:focus{border-color:rgba(0,200,160,.45)}
+.s-in.ro{color:var(--text3);cursor:default}
+.s-val{font-size:.72rem;color:var(--teal);font-family:'JetBrains Mono',monospace;font-weight:700}
+.save-btn{width:100%;padding:15px;border:none;border-radius:15px;background:linear-gradient(135deg,#00a87a,#007ec8);color:#030b14;font-family:'Orbitron',monospace;font-size:.74rem;font-weight:700;cursor:pointer;transition:all .25s;letter-spacing:1px;margin-top:4px;box-shadow:0 4px 16px rgba(0,168,122,.28)}
+.save-btn:active{transform:scale(.97)}
+.info-card{background:var(--blueg);border:1px solid rgba(0,150,230,.22);border-radius:13px;padding:12px 14px;margin-bottom:10px}
+.info-t{font-size:.64rem;color:var(--blue);font-weight:700;margin-bottom:6px;letter-spacing:.5px}
+.info-p{font-size:.7rem;color:var(--text2);line-height:1.7;font-family:'Rajdhani',sans-serif}
+.dp-panel{background:var(--sf);border:1px solid var(--b1);border-radius:10px;padding:10px;font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--teal2);line-height:2;max-height:260px;overflow-y:auto;min-height:50px}
+
+/* MODAL */
+.modal-ov{position:fixed;inset:0;z-index:500;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.7)}
+.modal-box{background:var(--card);border-radius:28px 28px 0 0;padding:24px 20px 32px;width:100%;max-width:430px;box-shadow:0 -8px 32px rgba(0,0,0,.55)}
+.modal-handle{width:44px;height:4px;background:var(--b2);border-radius:4px;margin:0 auto 18px}
+.modal-icon{font-size:3rem;text-align:center;margin-bottom:8px}
+.modal-title{font-family:'Orbitron',monospace;font-size:.95rem;font-weight:900;letter-spacing:1px;text-align:center;margin-bottom:4px}
+.modal-sub{font-size:.74rem;color:var(--text2);text-align:center;margin-bottom:12px;font-family:'Rajdhani',sans-serif}
+.modal-msg{border-radius:12px;padding:10px 13px;font-size:.68rem;font-family:'JetBrains Mono',monospace;line-height:1.8;margin-bottom:16px}
+.modal-btn{width:100%;padding:14px;border:none;border-radius:14px;font-family:'Orbitron',monospace;font-size:.74rem;font-weight:700;cursor:pointer;letter-spacing:1px}
+
+/* TOAST */
+.toast{position:fixed;bottom:70px;left:50%;transform:translateX(-50%) translateY(8px);background:var(--card2);border:1px solid var(--b2);border-radius:18px;padding:9px 16px;font-size:.75rem;font-weight:700;box-shadow:0 6px 20px var(--shadow);opacity:0;transition:all .3s;z-index:200;pointer-events:none;max-width:88vw;text-align:center;white-space:normal}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.success{border-color:rgba(0,200,160,.35);color:var(--teal2)}
+.toast.error{border-color:rgba(255,56,96,.35);color:var(--danger)}
+.toast.info{border-color:rgba(0,150,230,.35);color:var(--blue)}
+.toast.warn{border-color:rgba(245,166,35,.35);color:var(--warn)}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.card,.amp-card,.cost-row,.time-card,.hist-item,.mail-card,.set-card{animation:fadeUp .3s ease both}
+</style>
+</head>
+<body>
+<canvas id="bgc"></canvas>
+
+<div class="app">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" fill="none">
+          <rect x="4" y="3" width="11" height="15" rx="2" stroke="white" stroke-width="1.5" fill="none"/>
+          <path d="M9.5 6.5L7 12h4l-1.5 5.5L15 10h-4z" fill="white"/>
+          <path d="M15 8h4M15 11h4" stroke="white" stroke-width="1.3" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div>
+        <div class="logo-name">EV ŞARJ</div>
+        <div class="logo-by">by Acamay</div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="conn-btn" id="wifiBtn" onclick="reconnect()">
+        <div class="c-dot" id="wifiDot"></div>
+        <span id="wifiLbl">BAĞLANIYOR</span>
+      </div>
+      <div class="conn-btn" id="btBtn" onclick="btScan()">
+        <div class="c-dot" id="btDot"></div>
+        <span id="btLbl">BT</span>
+      </div>
+      <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">🌙</button>
+    </div>
+  </div>
+
+  <div class="pages">
+
+    <!-- ANA -->
+    <div class="page active" id="p-home">
+      <div class="card">
+        <div class="clock-row">
+          <div>
+            <div class="clock-time" id="clockEl">00:00:00</div>
+            <div class="clock-date" id="dateEl">--</div>
+          </div>
+          <div class="sbadge s-idle" id="statusBadge">BEKLIYOR</div>
+        </div>
+
+        <div class="soc-section">
+          <div class="ring-wrap">
+            <svg class="ring-svg" viewBox="0 0 160 160">
+              <circle class="r-track" cx="80" cy="80" r="72"/>
+              <circle class="r-target" id="rTarget" cx="80" cy="80" r="72"/>
+              <circle class="r-fill" id="rFill" cx="80" cy="80" r="72"/>
+            </svg>
+            <div class="ring-center">
+              <div class="r-pct" id="rPct">--%</div>
+              <div class="r-lbl">BATARYA</div>
+              <div class="r-kwh" id="rKwh">-- / -- kWh</div>
+            </div>
+          </div>
+          <div class="timer-row">
+            <div class="timer-box">
+              <div class="t-lbl">%80'e Kalan</div>
+              <div class="t-val" id="t80">--</div>
+            </div>
+            <div class="timer-box">
+              <div class="t-lbl">%100'e Kalan</div>
+              <div class="t-val blue" id="t100">--</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="dev-row">
+          <div class="dev-ico" id="devIco">🔌</div>
+          <div class="dev-info">
+            <div class="dev-title" id="devTitle">Şarjör</div>
+            <div class="dev-sub" id="devSub">Bağlantı bekleniyor...</div>
+          </div>
+          <div class="dev-right">
+            <div class="dev-state" id="devState">--</div>
+            <div class="dev-fw" id="devFw">--</div>
+          </div>
+        </div>
+
+        <div style="font-size:.5rem;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;font-family:'JetBrains Mono',monospace;margin-bottom:7px">Trifaze Voltaj — Gerçek Zamanlı</div>
+        <div class="tf-grid">
+          <div class="tf-box"><div class="tf-lbl">L1</div><div class="tf-val" id="v1">--</div><div class="tf-unit">V</div></div>
+          <div class="tf-box"><div class="tf-lbl">L2</div><div class="tf-val" id="v2">--</div><div class="tf-unit">V</div></div>
+          <div class="tf-box"><div class="tf-lbl">L3</div><div class="tf-val" id="v3">--</div><div class="tf-unit">V</div></div>
+        </div>
+        <div class="m-grid">
+          <div class="m-box"><div class="m-lbl">AKIM</div><div class="m-val c-t" id="mA">--</div><div class="m-unit">A/faz</div></div>
+          <div class="m-box"><div class="m-lbl">GÜÇ</div><div class="m-val c-b" id="mP">--</div><div class="m-unit">kW</div></div>
+          <div class="m-box"><div class="m-lbl">ALINAN</div><div class="m-val c-w" id="mE">0.00</div><div class="m-unit">kWh</div></div>
+        </div>
+      </div>
+
+      <div class="amp-card">
+        <div class="amp-hdr">
+          <div class="amp-lbl">⚡ Akım Ayarı — Trifaze</div>
+          <div>
+            <div class="amp-formula" id="ampFormula">3 × 16A = 10.99 kW</div>
+            <div class="amp-big"><span id="ampVal">16</span><span class="u">A/faz</span></div>
+          </div>
+        </div>
+        <input type="range" id="ampSlider" min="6" max="32" value="16" oninput="onAmpSlide(this.value)">
+        <div class="amp-marks">
+          <span class="a-mark">6A</span><span class="a-mark">10A</span>
+          <span class="a-mark">16A</span><span class="a-mark">24A</span>
+          <span class="a-mark">32A</span>
+        </div>
+        <div class="presets">
+          <button class="pr" onclick="setPreset(6)">6A<span>1.4kW</span></button>
+          <button class="pr" onclick="setPreset(10)">10A<span>6.9kW</span></button>
+          <button class="pr active" onclick="setPreset(16)">16A<span>11kW</span></button>
+          <button class="pr" onclick="setPreset(20)">20A<span>13.8kW</span></button>
+          <button class="pr" onclick="setPreset(32)">32A<span>22kW</span></button>
+        </div>
+      </div>
+
+      <div class="cost-row">
+        <div>
+          <div class="cost-lbl">Seans Maliyeti</div>
+          <div class="cost-num"><span id="costVal">0.00</span><span class="u">₺</span></div>
+        </div>
+        <div>
+          <div class="price-lbl">₺ / kWh</div>
+          <input type="number" class="price-in" id="priceIn" value="2.50" step="0.01" oninput="recalcCost()">
+        </div>
+      </div>
+
+      <div class="ctrl-grid">
+        <button class="ctrl-btn btn-start" id="btnStart" onclick="doStart()">⚡ ŞARJ BAŞLAT</button>
+        <button class="ctrl-btn btn-stop" id="btnStop" onclick="doStop()">■ DURDUR</button>
+      </div>
+    </div>
+
+    <!-- ZAMANLAMA -->
+    <div class="page" id="p-sched">
+      <div class="sec-title">Yeni Zamanlama</div>
+      <div class="time-card">
+        <div class="time-row">
+          <div class="tl">Başlangıç</div>
+          <input type="time" class="t-in" id="tStart" value="23:00">
+          <div class="t-sep">→</div>
+          <div class="tl">Bitiş</div>
+          <input type="time" class="t-in" id="tEnd" value="07:00">
+        </div>
+        <div class="tgt-row">
+          <div class="tl" style="white-space:nowrap">Hedef SOC</div>
+          <input type="range" id="tgtRange" min="20" max="100" value="80" style="flex:1" oninput="onTgtSlide(this.value)">
+          <div class="tgt-v" id="tgtVal">%80</div>
+        </div>
+        <div class="tl" style="margin-bottom:8px">GÜNLER</div>
+        <div class="days-row" id="daysRow">
+          <button class="db" onclick="this.classList.toggle('active')">Pzt</button>
+          <button class="db active" onclick="this.classList.toggle('active')">Sal</button>
+          <button class="db active" onclick="this.classList.toggle('active')">Çar</button>
+          <button class="db active" onclick="this.classList.toggle('active')">Per</button>
+          <button class="db active" onclick="this.classList.toggle('active')">Cum</button>
+          <button class="db" onclick="this.classList.toggle('active')">Cmt</button>
+          <button class="db" onclick="this.classList.toggle('active')">Paz</button>
+        </div>
+        <button class="add-btn" onclick="addSchedule()">+ Zamanlama Ekle</button>
+      </div>
+      <div class="sec-title">Kayıtlı</div>
+      <div id="schedList">
+        <div class="sch-item">
+          <div><div class="sch-time">23:00 → 07:00</div><div class="sch-days">Sal · Çar · Per · Cum · %80 · 16A/faz</div></div>
+          <div style="display:flex;align-items:center;gap:7px">
+            <label class="tog"><input type="checkbox" checked><span class="tog-sl"></span></label>
+            <button class="del-btn" onclick="this.closest('.sch-item').remove();toast('Silindi','warn')">SİL</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GEÇMİŞ -->
+    <div class="page" id="p-hist">
+      <div class="card" style="margin-bottom:9px">
+        <div class="mnav">
+          <button class="mnav-btn" onclick="prevMonth()">‹</button>
+          <div class="month-t" id="monthT">--</div>
+          <button class="mnav-btn" onclick="nextMonth()">›</button>
+        </div>
+        <div class="chart-sc"><div class="day-chart" id="dayChart"></div></div>
+        <div class="chart-sum">
+          <div class="cs-item"><div class="cs-lbl">Toplam</div><div class="cs-val" id="csTot">-- kWh</div></div>
+          <div class="cs-item"><div class="cs-lbl">Maliyet</div><div class="cs-val w" id="csCost">-- ₺</div></div>
+          <div class="cs-item"><div class="cs-lbl">Seans</div><div class="cs-val" id="csSeans">--</div></div>
+        </div>
+      </div>
+      <div class="hf">
+        <button class="hfb active" onclick="setFilt(this,'all')">Tümü</button>
+        <button class="hfb" onclick="setFilt(this,'c')">Şarj</button>
+        <button class="hfb" onclick="setFilt(this,'s')">Zamanlama</button>
+        <button class="hfb" onclick="setFilt(this,'x')">Kesilen</button>
+      </div>
+      <div id="histCont"></div>
+      <div class="sec-title">Mail & Dışa Aktar</div>
+      <div class="mail-card">
+        <div class="auto-row">
+          <div><div class="a-t">Otomatik Mail</div><div class="a-s">Her şarj sonrası gönder</div></div>
+          <label class="tog"><input type="checkbox"><span class="tog-sl"></span></label>
+        </div>
+        <div class="auto-row">
+          <div><div class="a-t">Aylık Özet</div><div class="a-s">Her ayın 1'i</div></div>
+          <label class="tog"><input type="checkbox"><span class="tog-sl"></span></label>
+        </div>
+        <div class="mail-row" style="margin-top:10px">
+          <input type="email" class="mail-in" id="mailAddr" placeholder="e-posta adresiniz">
+          <button class="mail-btn" onclick="sendMail()">GÖNDER</button>
+        </div>
+        <div class="exp-grid">
+          <button class="eg" onclick="expData('csv')"><span class="ei">📊</span>CSV İndir</button>
+          <button class="eg" onclick="expData('pdf')"><span class="ei">📄</span>PDF</button>
+          <button class="eg" onclick="expData('json')"><span class="ei">🗂️</span>JSON</button>
+          <button class="eg" onclick="clearHist()"><span class="ei" style="color:var(--danger)">🗑️</span><span style="color:var(--danger)">Geçmişi Sil</span></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- AYARLAR -->
+    <div class="page" id="p-set">
+      <div class="info-card">
+        <div class="info-t">ℹ️ Bağlantı Hakkında</div>
+        <div class="info-p">Uygulama <strong>Tuya Cloud API</strong> üzerinden cihaza bağlanır. WiFi ve şarj cihazı online olmalıdır. Bluetooth butonu ile BLE cihazlara da bağlanılabilir. IP Whitelist kapalıysa Tuya platformundan açın.</div>
+      </div>
+      <div class="sec-title">Tuya API Ayarları</div>
+      <div class="set-card">
+        <div class="set-row"><div><div class="s-lbl">Access ID</div><div class="s-hint">Tuya Developer → Proje → Overview</div></div><input class="s-in" id="cfgKey" type="text" value="hgckavf597ej5p9upy4x"></div>
+        <div class="set-row"><div><div class="s-lbl">Access Secret</div><div class="s-hint">Tuya Developer → Proje → Overview</div></div><input class="s-in" id="cfgSecret" type="password" value="2b28b71c827f40e5af7ad041a485dace"></div>
+        <div class="set-row"><div><div class="s-lbl">Device ID</div><div class="s-hint">Tuya → Cihaz Detayı</div></div><input class="s-in" id="cfgDev" type="text" value="bf26d2e9017b1afafcssja"></div>
+        <div class="set-row"><div><div class="s-lbl">Bölge</div><div class="s-hint">eu / us / cn / in</div></div><input class="s-in" id="cfgRegion" type="text" value="eu"></div>
+      </div>
+      <div class="sec-title">Araç Ayarları</div>
+      <div class="set-card">
+        <div class="set-row"><div><div class="s-lbl">Batarya Kapasitesi (kWh)</div></div><input class="s-in" id="setBat" type="number" value="80" min="10" max="300"></div>
+        <div class="set-row"><div><div class="s-lbl">Mevcut SOC (%)</div><div class="s-hint">Şu anki şarj yüzdesi (manuel gir)</div></div><input class="s-in" id="setSoc" type="number" value="15" min="0" max="100" oninput="socLive(this.value)"></div>
+        <div class="set-row"><div><div class="s-lbl">Hedef SOC (%)</div></div><input class="s-in" id="setTgt" type="number" value="80" min="20" max="100"></div>
+        <div class="set-row"><div><div class="s-lbl">Birim Fiyat (₺/kWh)</div></div><input class="s-in" id="setPrice" type="number" value="2.50" step="0.01"></div>
+        <div class="set-row"><div><div class="s-lbl">Gece Tarife Başlangıcı</div></div><input class="s-in" id="setNight" type="time" value="23:00"></div>
+        <div class="set-row"><div><div class="s-lbl">Gece Tarife Fiyatı (₺/kWh)</div></div><input class="s-in" id="setNightP" type="number" value="1.80" step="0.01"></div>
+      </div>
+      <div class="sec-title">Bildirimler</div>
+      <div class="set-card">
+        <div class="set-row"><div><div class="s-lbl">Şarj Tamamlandı</div></div><label class="tog"><input type="checkbox" checked><span class="tog-sl"></span></label></div>
+        <div class="set-row"><div><div class="s-lbl">Hedef SOC'a Ulaşıldı</div></div><label class="tog"><input type="checkbox" checked><span class="tog-sl"></span></label></div>
+        <div class="set-row"><div><div class="s-lbl">Bağlantı Koptu</div></div><label class="tog"><input type="checkbox" checked><span class="tog-sl"></span></label></div>
+        <div class="set-row"><div><div class="s-lbl">Yüksek Sıcaklık</div></div><label class="tog"><input type="checkbox" checked><span class="tog-sl"></span></label></div>
+      </div>
+      <div class="sec-title">Canlı Cihaz Bilgisi</div>
+      <div class="set-card">
+        <div class="set-row"><div><div class="s-lbl">Bağlantı</div></div><div class="s-val" id="infoConn">--</div></div>
+        <div class="set-row"><div><div class="s-lbl">Firmware</div></div><div class="s-val" id="infoFw">--</div></div>
+        <div class="set-row"><div><div class="s-lbl">MAC</div></div><div class="s-val">d8:c8:0c:6f:fd:77</div></div>
+        <div class="set-row"><div><div class="s-lbl">Son Güncelleme</div></div><div class="s-val" id="infoUpd">--</div></div>
+        <div class="set-row"><div><div class="s-lbl">Versiyon</div></div><div class="s-val">v3.1</div></div>
+        <div class="set-row"><div><div class="s-lbl">Geliştirici</div></div><div class="s-val">Acamay</div></div>
+      </div>
+      <div class="sec-title">Ham DP Verileri (Debug)</div>
+      <div class="set-card" style="padding:13px">
+        <div style="font-size:.58rem;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-bottom:7px">Cihazdan gelen tüm DP kodları:</div>
+        <div class="dp-panel" id="dpPanel"><span style="color:var(--text3)">Veri bekleniyor...</span></div>
+        <button onclick="document.getElementById('dpPanel').innerHTML='<span style=color:var(--text3)>Temizlendi</span>'" style="width:100%;margin-top:8px;padding:8px;border:1px solid var(--b2);background:var(--sf);color:var(--text3);border-radius:9px;cursor:pointer;font-size:.7rem;font-family:Rajdhani,sans-serif;font-weight:700">Temizle</button>
+      </div>
+      <button class="save-btn" onclick="saveSettings()">💾 Kaydet ve Yeniden Bağlan</button>
+    </div>
+
+  </div>
+
+  <nav class="nav">
+    <button class="ni active" onclick="goPage('home',this)"><span class="ni-ico">⚡</span>Ana</button>
+    <button class="ni" onclick="goPage('sched',this)"><span class="ni-ico">🕐</span>Zamanlama</button>
+    <button class="ni" onclick="goPage('hist',this)"><span class="ni-ico">📊</span>Geçmiş</button>
+    <button class="ni" onclick="goPage('set',this)"><span class="ni-ico">⚙️</span>Ayarlar</button>
+  </nav>
+</div>
+
+<div class="toast" id="toastEl"></div>
+
+<script>
+'use strict';
+
+/* ═══════════════════════════════════════
+   UYGULAMA DURUMU
+═══════════════════════════════════════ */
+var A = {
+  // Tuya API
+  key:     'hgckavf597ej5p9upy4x',
+  secret:  '2b28b71c827f40e5af7ad041a485dace',
+  devId:   'bf26d2e9017b1afafcssja',
+  region:  'eu',
+  token:   null,
+  tokenExp:0,
+
+  // Araç
+  soc:      15,
+  socStart: 15,
+  batKwh:   80,
+  targetSoc:80,
+
+  // Ölçüm (cihazdan gelen)
+  amp:     16,
+  power:   0,
+  current: 0,
+  energy:  0,
+  voltage: 0,
+
+  // Durum
+  workState:  'charger_free',
+  charging:   false,
+  connected:  false,
+  firmware:   '--',
+  evConn:     false,
+
+  // Mali
+  unitPrice: 2.50,
+  sessionStartKwh: 0,
+
+  // UI
+  darkMode:    true,
+  histFilter:  'all',
+  monthOffset: 0,
+
+  // Geçmiş
+  history: [],
+
+  // Timer
+  pollTimer: null
+};
+
+var MONTHS=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+var DAYS=['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'];
+
+/* ═══════════════════════════════════════
+   STORAGE
+═══════════════════════════════════════ */
+function saveStore(){
+  try{localStorage.setItem('acamay',JSON.stringify({
+    key:A.key,secret:A.secret,devId:A.devId,region:A.region,
+    soc:A.soc,batKwh:A.batKwh,targetSoc:A.targetSoc,
+    amp:A.amp,unitPrice:A.unitPrice,darkMode:A.darkMode,
+    history:A.history.slice(0,150)
+  }));}catch(e){}
+}
+function loadStore(){
+  try{
+    var d=JSON.parse(localStorage.getItem('acamay')||'{}');
+    if(d.key)A.key=d.key;
+    if(d.secret)A.secret=d.secret;
+    if(d.devId)A.devId=d.devId;
+    if(d.region)A.region=d.region;
+    if(d.soc!=null)A.soc=d.soc;
+    if(d.batKwh)A.batKwh=d.batKwh;
+    if(d.targetSoc)A.targetSoc=d.targetSoc;
+    if(d.amp)A.amp=d.amp;
+    if(d.unitPrice)A.unitPrice=d.unitPrice;
+    if(d.darkMode!=null)A.darkMode=d.darkMode;
+    if(d.history)A.history=d.history;
+  }catch(e){}
+}
+
+/* ═══════════════════════════════════════
+   BG CANVAS
+═══════════════════════════════════════ */
+var cv=document.getElementById('bgc'),cx=cv.getContext('2d'),pts=[];
+function szC(){cv.width=window.innerWidth;cv.height=window.innerHeight;pts=[];for(var i=0;i<22;i++)pts.push({x:Math.random()*cv.width,y:Math.random()*cv.height,vx:(Math.random()-.5)*.18,vy:(Math.random()-.5)*.18});}
+function animBg(){cx.clearRect(0,0,cv.width,cv.height);for(var i=0;i<pts.length;i++){var p=pts[i];p.x+=p.vx;p.y+=p.vy;if(p.x<0||p.x>cv.width)p.vx*=-1;if(p.y<0||p.y>cv.height)p.vy*=-1;cx.beginPath();cx.arc(p.x,p.y,1,0,Math.PI*2);cx.fillStyle='rgba(0,200,160,.18)';cx.fill();for(var j=i+1;j<pts.length;j++){var q=pts[j];var d=Math.sqrt((p.x-q.x)*(p.x-q.x)+(p.y-q.y)*(p.y-q.y));if(d<88){cx.beginPath();cx.moveTo(p.x,p.y);cx.lineTo(q.x,q.y);cx.strokeStyle='rgba(0,200,160,'+(.05*(1-d/88))+')';cx.lineWidth=.4;cx.stroke();}}}requestAnimationFrame(animBg);}
+szC();window.addEventListener('resize',szC);animBg();
+
+/* ═══════════════════════════════════════
+   SAAT
+═══════════════════════════════════════ */
+function tickClock(){
+  var n=new Date();
+  document.getElementById('clockEl').textContent=String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0')+':'+String(n.getSeconds()).padStart(2,'0');
+  document.getElementById('dateEl').textContent=DAYS[n.getDay()]+', '+n.getDate()+' '+MONTHS[n.getMonth()]+' '+n.getFullYear();
+}
+setInterval(tickClock,1000);tickClock();
+
+/* ═══════════════════════════════════════
+   SES SİSTEMİ
+═══════════════════════════════════════ */
+var audioCtx=null;
+function getAudio(){if(!audioCtx){try{audioCtx=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}}return audioCtx;}
+function playTone(freqs,durs,types,vols){
+  var ctx=getAudio();if(!ctx)return;
+  var off=0;
+  for(var i=0;i<freqs.length;i++){
+    (function(f,d,tp,v,s){var o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.type=tp||'sine';o.frequency.setValueAtTime(f,ctx.currentTime+s);g.gain.setValueAtTime(0,ctx.currentTime+s);g.gain.linearRampToValueAtTime(v||0.2,ctx.currentTime+s+0.015);g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+s+d);o.start(ctx.currentTime+s);o.stop(ctx.currentTime+s+d+0.05);})(freqs[i],durs[i],types[i],vols[i],off);
+    off+=durs[i]+0.04;
+  }
+}
+function sndChargerOk(){playTone([523,784],[0.14,0.24],['square','square'],[0.2,0.25]);}
+function sndCarOk(){playTone([523,659,784],[0.1,0.1,0.22],['sine','sine','sine'],[0.2,0.2,0.28]);}
+function sndStart(){playTone([220,440,660,880],[0.07,0.07,0.07,0.2],['sawtooth','sawtooth','sawtooth','sawtooth'],[0.12,0.15,0.18,0.22]);}
+function sndDone(){playTone([523,587,659,784,659,784,1047],[0.09,0.09,0.09,0.14,0.09,0.09,0.32],['sine','sine','sine','sine','sine','sine','sine'],[0.18,0.18,0.18,0.22,0.18,0.18,0.28]);}
+function sndError(){playTone([440,330,220],[0.13,0.13,0.28],['square','square','square'],[0.22,0.22,0.28]);}
+function sndDisconn(){playTone([330,220],[0.11,0.24],['square','square'],[0.18,0.22]);}
+
+/* ═══════════════════════════════════════
+   MODAL
+═══════════════════════════════════════ */
+var modTimer=null;
+function showModal(icon,title,sub,msg,btnTxt,type){
+  var old=document.getElementById('connModal');if(old)old.remove();
+  clearTimeout(modTimer);
+  var cmap={success:'var(--teal2)',warning:'var(--warn)',error:'var(--danger)',info:'var(--blue)'};
+  var bmap={success:'var(--tealg)',warning:'var(--warnl)',error:'var(--dangerl)',info:'var(--blueg)'};
+  var brmap={success:'rgba(0,200,160,.3)',warning:'rgba(245,166,35,.3)',error:'rgba(255,56,96,.3)',info:'rgba(0,150,230,.3)'};
+  var c=cmap[type]||cmap.success,bg=bmap[type]||bmap.success,br=brmap[type]||brmap.success;
+  var msgHtml=msg.replace(/\n/g,'<br>');
+  var el=document.createElement('div');
+  el.id='connModal';el.className='modal-ov';
+  el.innerHTML='<div class="modal-box" style="border:1px solid '+br+'">'
+    +'<div class="modal-handle"></div>'
+    +'<div class="modal-icon">'+icon+'</div>'
+    +'<div class="modal-title" style="color:'+c+'">'+title+'</div>'
+    +'<div class="modal-sub">'+sub+'</div>'
+    +'<div class="modal-msg" style="background:'+bg+';border:1px solid '+br+';color:'+c+'">'+msgHtml+'</div>'
+    +'<button class="modal-btn" style="background:linear-gradient(135deg,'+c+',var(--blue));color:#030b14" onclick="document.getElementById(\'connModal\').remove()">'+btnTxt+'</button>'
+    +'</div>';
+  document.body.appendChild(el);
+  el.addEventListener('click',function(e){if(e.target===el)el.remove();});
+  modTimer=setTimeout(function(){var m=document.getElementById('connModal');if(m)m.remove();},9000);
+}
+
+/* ═══════════════════════════════════════
+   TUYA CLOUD API
+═══════════════════════════════════════ */
+function tuyaBase(){return A.region==='us'?'https://openapi.tuyaus.com':'https://openapi.tuyaeu.com';}
+
+async function sha256hex(msg){
+  var buf=new TextEncoder().encode(msg);
+  var hash=await crypto.subtle.digest('SHA-256',buf);
+  return Array.from(new Uint8Array(hash)).map(function(b){return b.toString(16).padStart(2,'0');}).join('');
+}
+async function hmacHex(key,msg){
+  var k=new TextEncoder().encode(key),m=new TextEncoder().encode(msg);
+  var ck=await crypto.subtle.importKey('raw',k,{name:'HMAC',hash:'SHA-256'},false,['sign']);
+  var sig=await crypto.subtle.sign('HMAC',ck,m);
+  return Array.from(new Uint8Array(sig)).map(function(b){return b.toString(16).padStart(2,'0');}).join('');
+}
+
+async function tuyaToken(){
+  var now=Date.now();
+  if(A.token&&now<A.tokenExp-60000)return A.token;
+  var t=String(now);
+  var bh=await sha256hex('');
+  var ss='GET\n'+bh+'\n\n/v1.0/token?grant_type=1';
+  var sign=(await hmacHex(A.secret,A.key+t+ss)).toUpperCase();
+  var res=await fetch(tuyaBase()+'/v1.0/token?grant_type=1',{headers:{'client_id':A.key,'t':t,'sign_method':'HMAC-SHA256','sign':sign,'nonce':''}});
+  var d=await res.json();
+  if(d.success){A.token=d.result.access_token;A.tokenExp=now+d.result.expire_time*1000;return A.token;}
+  throw new Error('Token: '+(d.msg||JSON.stringify(d)));
+}
+
+async function tuyaGet(path){
+  var tok=await tuyaToken();
+  var t=String(Date.now());
+  var bh=await sha256hex('');
+  var ss='GET\n'+bh+'\n\n'+path;
+  var sign=(await hmacHex(A.secret,A.key+tok+t+ss)).toUpperCase();
+  var res=await fetch(tuyaBase()+path,{headers:{'client_id':A.key,'access_token':tok,'t':t,'sign_method':'HMAC-SHA256','sign':sign,'nonce':''}});
+  return res.json();
+}
+
+async function tuyaPost(path,body){
+  var tok=await tuyaToken();
+  var t=String(Date.now());
+  var bs=JSON.stringify(body);
+  var bh=await sha256hex(bs);
+  var ss='POST\n'+bh+'\n\n'+path;
+  var sign=(await hmacHex(A.secret,A.key+tok+t+ss)).toUpperCase();
+  var res=await fetch(tuyaBase()+path,{method:'POST',headers:{'client_id':A.key,'access_token':tok,'t':t,'sign_method':'HMAC-SHA256','sign':sign,'nonce':'','Content-Type':'application/json'},body:bs});
+  return res.json();
+}
+
+/* ═══════════════════════════════════════
+   CİHAZ VERİSİ ÇEK
+═══════════════════════════════════════ */
+async function fetchStatus(){
+  try{
+    var data=await tuyaGet('/v1.0/devices/'+A.devId+'/status');
+    if(data.success&&data.result){
+      processDP(data.result);
+      setConn('on');
+      document.getElementById('infoUpd').textContent=new Date().toLocaleTimeString('tr');
+      document.getElementById('infoConn').textContent='ONLINE';
+    }else{
+      setConn('off');
+    }
+  }catch(e){
+    setConn('off');
+    console.log('[API ERR]',e.message);
+  }
+}
+
+/* DP verilerini işle */
+function processDP(dps){
+  if(!Array.isArray(dps))return;
+
+  // Debug panele yaz
+  var html='';
+  dps.forEach(function(dp){
+    html+='<span style="color:var(--teal)">'+dp.code+'</span> = <span style="color:var(--warn)">'+JSON.stringify(dp.value)+'</span><br>';
+    console.log('[DP]',dp.code,'=',dp.value,typeof dp.value);
+  });
+  var panel=document.getElementById('dpPanel');
+  if(panel)panel.innerHTML=html||'<span style="color:var(--text3)">Boş</span>';
+
+  dps.forEach(function(dp){
+    var code=dp.code,val=dp.value;
+
+    // ── ÇALIŞMA DURUMU ──────────────────────
+    if(code==='work_state'){
+      A.workState=val;
+      var smap={'charger_free':'BOŞTA','free':'BOŞTA','charging':'ŞARJ EDİYOR','charger_charging':'ŞARJ EDİYOR','paused':'DURDURULDU','charger_pause':'DURDURULDU','fault':'HATA','charger_fault':'HATA','finished':'TAMAMLANDI','charger_finish':'TAMAMLANDI'};
+      var scls={'charger_free':'s-idle','free':'s-idle','charging':'s-charging','charger_charging':'s-charging','paused':'s-paused','charger_pause':'s-paused','fault':'s-fault','charger_fault':'s-fault','finished':'s-done','charger_finish':'s-done'};
+      var sico={'charger_free':'🔌','free':'🔌','charging':'⚡','charger_charging':'⚡','paused':'⏸️','charger_pause':'⏸️','fault':'⚠️','charger_fault':'⚠️','finished':'✅','charger_finish':'✅'};
+      var badge=document.getElementById('statusBadge');
+      badge.className='sbadge '+(scls[val]||'s-idle');
+      badge.textContent=smap[val]||val.toUpperCase();
+      document.getElementById('devIco').textContent=sico[val]||'🔌';
+      document.getElementById('devTitle').textContent='Şarjör — '+(smap[val]||val);
+      document.getElementById('devState').textContent=smap[val]||val;
+      var wasCharging=A.charging;
+      A.charging=(val==='charging'||val==='charger_charging');
+      // Şarj bitti
+      if(!A.charging&&wasCharging&&A.energy>A.sessionStartKwh){
+        addHist({t:'c',title:'Şarj Tamamlandı',energy:A.energy-A.sessionStartKwh});
+        if(val==='finished'||val==='charger_finish'){sndDone();var pr=parseFloat(document.getElementById('priceIn').value)||A.unitPrice;showModal('✅','ŞARJ TAMAMLANDI!','Hedef doluluk seviyesine ulaşıldı','⚡ Alınan: '+(A.energy-A.sessionStartKwh).toFixed(2)+' kWh\n💰 Maliyet: '+((A.energy-A.sessionStartKwh)*pr).toFixed(2)+' ₺\n🔋 Batarya: %'+Math.round(A.soc),'✅ TAMAM','success');}
+      }
+      if(val==='fault'||val==='charger_fault'){sndError();showModal('⚠️','ŞARJ HATASI!','Cihazda sorun tespit edildi','❌ Hata alındı\n🔌 Kablo kontrolü yapın\n📞 Teknik destek gerekebilir','TAMAM','error');}
+    }
+
+    // ── BAĞLANTI DURUMU / EV TAKILI MI ──────
+    if(code==='connection_state'||code==='work_mode'){
+      document.getElementById('devSub').textContent='Mod: '+val+' · WiFi LAN';
+    }
+    if(code==='plug_state'||code==='ev_connect_state'){
+      if((val==='connected'||val===true)&&!A.evConn){
+        A.evConn=true;sndCarOk();
+        showModal('🚗','ARAÇ BAĞLANDI!','Şarj kablosu araçta tespit edildi','✅ EV Bağlantısı: Aktif\n✅ Şarjör: Hazır\n🔋 Mevcut SOC: %'+Math.round(A.soc)+'\n\n👆 Şarjı başlatmak için butona basın.','⚡ ŞARJI BAŞLAT','success');
+      }else if(val!=='connected'&&val!==true&&A.evConn){
+        A.evConn=false;toast('🚗 Araç kablosu çıkarıldı','warn');
+      }
+    }
+
+    // ── ALINAN ENERJİ ────────────────────────
+    if(code==='charge_energy_once'||code==='add_ele'||code==='charge_energy'){
+      var re=parseFloat(val)||0;
+      var kwh=re>100000?re/100000:re>10000?re/10000:re>1000?re/1000:re>100?re/100:re/10;
+      A.energy=Math.round(kwh*100)/100;
+      document.getElementById('mE').textContent=A.energy.toFixed(2);
+      // SOC'u alınan enerjiden güncelle
+      if(A.charging&&A.batKwh>0&&A.energy>A.sessionStartKwh){
+        var gained=A.energy-A.sessionStartKwh;
+        var newSoc=A.socStart+(gained/A.batKwh*100);
+        newSoc=Math.min(100,Math.round(newSoc*10)/10);
+        if(newSoc>A.soc){A.soc=newSoc;document.getElementById('setSoc').value=Math.round(A.soc);updateRing();}
+      }
+      recalcCost();
+    }
+
+    // ── GÜÇ ──────────────────────────────────
+    if(code==='charge_power'||code==='cur_power'||code==='power'){
+      var rp=parseFloat(val)||0;
+      var kw=rp>100000?rp/100000:rp>10000?rp/10000:rp>1000?rp/1000:rp>100?rp/100:rp>22?rp/10:rp;
+      A.power=Math.round(kw*100)/100;
+      document.getElementById('mP').textContent=A.power>0.01?A.power.toFixed(2):'0.00';
+      if(A.power>0.01){
+        A.current=Math.round(A.power*1000/(400*3)*10)/10;
+        document.getElementById('mA').textContent=A.current.toFixed(1);
+        showVoltage(400);
+      }
+      updateTimers();
+    }
+
+    // DP kodu 28 (bazı Tuya cihazlarda charge_power)
+    if(code==='28'){
+      var r28=parseFloat(val)||0;
+      var kw28=r28>10000?r28/10000:r28>1000?r28/1000:r28>100?r28/100:r28>22?r28/10:r28;
+      if(kw28>0.01&&kw28<30){
+        A.power=Math.round(kw28*100)/100;
+        document.getElementById('mP').textContent=A.power.toFixed(2);
+        A.current=Math.round(A.power*1000/(400*3)*10)/10;
+        document.getElementById('mA').textContent=A.current.toFixed(1);
+        showVoltage(400);
+        updateTimers();
+      }
+    }
+
+    // ── AKIM ─────────────────────────────────
+    if(code==='cur_current'||code==='current'){
+      var rc=parseFloat(val)||0;
+      var ac=rc>1000?rc/100:rc>100?rc/10:rc;
+      if(ac>0&&ac<100){
+        A.current=Math.round(ac*10)/10;
+        document.getElementById('mA').textContent=A.current.toFixed(1);
+        A.power=Math.round(A.current*400*3/10)/100;
+        document.getElementById('mP').textContent=A.power.toFixed(2);
+        showVoltage(400);
+        updateTimers();
+      }
+    }
+
+    // ── VOLTAJ ───────────────────────────────
+    if(code==='cur_voltage'||code==='voltage'||code==='vol'||code==='voltage_a'){
+      var rv=parseFloat(val)||0;
+      if(rv>10000)rv=rv/100;else if(rv>1000)rv=rv/10;
+      if(rv>50)showVoltage(rv);
+    }
+    if(code==='voltage_b'){var vb=parseFloat(val)||0;if(vb>10000)vb=vb/100;else if(vb>1000)vb=vb/10;if(vb>50)document.getElementById('v2').textContent=vb.toFixed(1);}
+    if(code==='voltage_c'){var vc=parseFloat(val)||0;if(vc>10000)vc=vc/100;else if(vc>1000)vc=vc/10;if(vc>50)document.getElementById('v3').textContent=vc.toFixed(1);}
+
+    // ── SET AMP (cihazdan gelen akım ayarı) ──
+    if(code==='set_amp'||code==='max_amp'){
+      var sa=parseInt(val)||0;
+      if(sa>=6&&sa<=32){
+        A.amp=sa;
+        document.getElementById('ampSlider').value=sa;
+        updateAmpUI(sa,false);
+      }
+    }
+
+    // ── FIRMWARE ─────────────────────────────
+    if(code==='firmware_version'){
+      A.firmware=val;
+      document.getElementById('devFw').textContent=val;
+      document.getElementById('infoFw').textContent=val;
+    }
+  });
+
+  updateRing();
+}
+
+function showVoltage(v){
+  var v1=document.getElementById('v1'),v2=document.getElementById('v2'),v3=document.getElementById('v3');
+  v1.textContent=(v+Math.random()*.4-.2).toFixed(1);v1.className='tf-val live';
+  v2.textContent=(v+Math.random()*.4-.2).toFixed(1);v2.className='tf-val live';
+  v3.textContent=(v+Math.random()*.4-.2).toFixed(1);v3.className='tf-val live';
+}
+
+/* ═══════════════════════════════════════
+   BAĞLANTI DURUMU
+═══════════════════════════════════════ */
+function setConn(s){
+  var dot=document.getElementById('wifiDot'),btn=document.getElementById('wifiBtn');
+  dot.classList.remove('pulse');
+  if(s==='on'){dot.classList.add('pulse');btn.className='conn-btn wifi-on';document.getElementById('wifiLbl').textContent='BAĞLI';var wasOff=!A.connected;A.connected=true;if(wasOff){sndChargerOk();showModal('🔌','ŞARJÖR BAĞLANDI!','WiFi LAN bağlantısı kuruldu','✅ Cihaz: '+A.devId.slice(0,12)+'...\n✅ Tuya Cloud: Aktif\n✅ Durum: Çevrimiçi\n\n⚡ Araca takınca şarj başlatabilirsiniz.','✅ TAMAM','success');}}
+  else{btn.className='conn-btn';document.getElementById('wifiLbl').textContent='BAĞLI DEĞİL';if(A.connected){A.connected=false;sndDisconn();toast('📡 Bağlantı kesildi','warn');}}
+}
+
+function reconnect(){
+  toast('🔄 Yeniden bağlanılıyor...','info');
+  A.token=null;
+  fetchStatus();
+}
+
+/* ═══════════════════════════════════════
+   BLUETOOTH
+═══════════════════════════════════════ */
+var btDevice=null;
+async function btScan(){
+  if(!navigator.bluetooth){toast('Tarayıcı BT desteklemiyor — APK gerekli','warn');return;}
+  try{
+    toast('🔵 BLE cihazlar aranıyor...','info');
+    btDevice=await navigator.bluetooth.requestDevice({acceptAllDevices:true,optionalServices:['0000fd50-0000-1000-8000-00805f9b34fb']});
+    btDevice.addEventListener('gattserverdisconnected',onBtDc);
+    await btDevice.gatt.connect();
+    var btn=document.getElementById('btBtn'),dot=document.getElementById('btDot');
+    btn.className='conn-btn bt-on';dot.style.background='var(--purple)';dot.style.boxShadow='0 0 6px var(--purple)';dot.classList.add('pulse');document.getElementById('btLbl').textContent='BAĞLI';
+    sndCarOk();
+    showModal('🔵','BLUETOOTH BAĞLANDI!','BLE bağlantısı kuruldu','✅ Cihaz: '+(btDevice.name||'BLE Cihaz')+'\n✅ Protokol: Bluetooth LE\n\nWiFi yokken BT üzerinden kontrol mümkün.','✅ TAMAM','info');
+  }catch(e){if(e.name!=='NotFoundError')toast('BT Hata: '+e.message,'error');}
+}
+function onBtDc(){
+  var btn=document.getElementById('btBtn'),dot=document.getElementById('btDot');
+  btn.className='conn-btn';dot.style.background='';dot.style.boxShadow='';dot.classList.remove('pulse');document.getElementById('btLbl').textContent='BT';
+  toast('🔵 BT bağlantısı kesildi','warn');sndDisconn();
+}
+
+/* ═══════════════════════════════════════
+   KOMUTLAR
+═══════════════════════════════════════ */
+async function doStart(){
+  var btn=document.getElementById('btnStart');
+  btn.disabled=true;btn.innerHTML='<div class="sp"></div>GÖNDERİLİYOR';
+  try{
+    var res=await tuyaPost('/v1.0/devices/'+A.devId+'/commands',{commands:[{code:'switch',value:true}]});
+    console.log('[START]',JSON.stringify(res));
+    if(res.success){
+      A.sessionStartKwh=A.energy;A.socStart=A.soc;
+      sndStart();
+      toast('⚡ Şarj başladı!','success');
+      showModal('⚡','ŞARJ BAŞLADI!','Komut cihaza iletildi','🔋 Başlangıç: %'+Math.round(A.soc)+'\n🎯 Hedef: %'+A.targetSoc+'\n⚡ Akım: '+A.amp+'A/faz ('+(A.amp*400*3/1000).toFixed(1)+' kW)\n\nŞarj takip ediliyor...','✅ TAMAM','success');
+      setTimeout(fetchStatus,2500);
+    }else{
+      sndError();
+      toast('Hata: '+(res.msg||res.code||'bilinmeyen'),'error');
+      console.log('[START ERR]',res);
+    }
+  }catch(e){sndError();toast('Bağlantı hatası: '+e.message,'error');}
+  btn.disabled=false;btn.innerHTML='⚡ ŞARJ BAŞLAT';
+}
+
+async function doStop(){
+  var btn=document.getElementById('btnStop');
+  btn.disabled=true;btn.innerHTML='<div class="sp"></div>GÖNDERİLİYOR';
+  try{
+    var res=await tuyaPost('/v1.0/devices/'+A.devId+'/commands',{commands:[{code:'switch',value:false}]});
+    console.log('[STOP]',JSON.stringify(res));
+    if(res.success){
+      toast('■ Şarj durduruldu','warn');
+      if(A.energy>A.sessionStartKwh)addHist({t:'x',title:'Şarj Kesildi',energy:A.energy-A.sessionStartKwh});
+      setTimeout(fetchStatus,2500);
+    }else{
+      toast('Hata: '+(res.msg||res.code||'bilinmeyen'),'error');
+      console.log('[STOP ERR]',res);
+    }
+  }catch(e){toast('Bağlantı hatası: '+e.message,'error');}
+  btn.disabled=false;btn.innerHTML='■ DURDUR';
+}
+
+var ampTimer=null;
+function onAmpSlide(v){
+  updateAmpUI(parseInt(v),true);
+}
+function updateAmpUI(v,sendCmd){
+  A.amp=v;
+  var pw=(v*400*3/1000).toFixed(2);
+  document.getElementById('ampVal').textContent=v;
+  document.getElementById('ampFormula').textContent='3 × '+v+'A = '+pw+' kW';
+  var pct=Math.round((v-6)/(32-6)*100)+'%';
+  document.getElementById('ampSlider').style.setProperty('--pct',pct);
+  document.querySelectorAll('.pr').forEach(function(b){b.classList.remove('active');if(parseInt(b.textContent)===v)b.classList.add('active');});
+  if(sendCmd){
+    clearTimeout(ampTimer);
+    ampTimer=setTimeout(async function(){
+      try{
+        var res=await tuyaPost('/v1.0/devices/'+A.devId+'/commands',{commands:[{code:'set_amp',value:v}]});
+        if(res.success)toast('Akım ayarlandı: '+v+'A','info');
+        else toast('Akım hata: '+(res.msg||'?'),'warn');
+      }catch(e){}
+    },1200);
+  }
+}
+function setPreset(v){document.getElementById('ampSlider').value=v;onAmpSlide(v);}
+function recalcCost(){var p=parseFloat(document.getElementById('priceIn').value)||A.unitPrice;document.getElementById('costVal').textContent=(A.energy*p).toFixed(2);}
+function socLive(v){A.soc=Math.min(100,Math.max(0,parseFloat(v)||0));updateRing();updateTimers();}
+
+/* ═══════════════════════════════════════
+   SOC HALKASI
+═══════════════════════════════════════ */
+function updateRing(){
+  var soc=Math.round(A.soc);
+  var circ=452;
+  var offset=circ-(circ*soc/100);
+  var rf=document.getElementById('rFill');
+  rf.style.strokeDashoffset=offset;
+  var stroke;
+  if(soc<20){stroke='#ff3860';rf.style.stroke=stroke;rf.style.filter='drop-shadow(0 0 7px rgba(255,56,96,.5))';}
+  else if(soc<40){stroke='#f5a623';rf.style.stroke=stroke;rf.style.filter='drop-shadow(0 0 7px rgba(245,166,35,.5))';}
+  else{stroke='#00f0b8';rf.style.stroke=stroke;rf.style.filter='drop-shadow(0 0 7px rgba(0,240,184,.5))';}
+  document.getElementById('rPct').textContent=soc+'%';
+  document.getElementById('rPct').style.color=soc<20?'var(--danger)':soc<40?'var(--warn)':'var(--teal2)';
+  document.getElementById('rKwh').textContent=(A.batKwh*soc/100).toFixed(1)+' / '+A.batKwh+' kWh';
+  document.getElementById('rTarget').setAttribute('stroke-dashoffset',circ-(circ*A.targetSoc/100));
+}
+function updateTimers(){
+  var pw=A.power;
+  if(pw<=0.01){document.getElementById('t80').textContent='--';document.getElementById('t100').textContent='--';return;}
+  var r80=Math.max(0,A.batKwh*(80-A.soc)/100);
+  var r100=Math.max(0,A.batKwh*(100-A.soc)/100);
+  document.getElementById('t80').textContent=fmtH(r80/pw);
+  document.getElementById('t100').textContent=fmtH(r100/pw);
+  document.getElementById('t80').style.color=A.soc>=80?'var(--teal2)':'var(--teal)';
+  document.getElementById('t100').style.color=A.soc>=100?'var(--teal2)':'var(--blue)';
+}
+function fmtH(h){if(h<=0)return'TAMAM';var hh=Math.floor(h),mm=Math.round((h-hh)*60);if(hh===0)return mm+'dk';return hh+'s '+mm+'dk';}
+
+/* ═══════════════════════════════════════
+   NAVİGASYON & TEMA
+═══════════════════════════════════════ */
+function goPage(id,btn){
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
+  document.querySelectorAll('.ni').forEach(function(b){b.classList.remove('active');});
+  document.getElementById('p-'+id).classList.add('active');
+  btn.classList.add('active');
+  if(id==='hist')renderHist();
+}
+function toggleTheme(){
+  A.darkMode=!A.darkMode;
+  document.body.classList.toggle('light',!A.darkMode);
+  document.getElementById('themeBtn').textContent=A.darkMode?'🌙':'☀️';
+  saveStore();
+}
+
+/* ═══════════════════════════════════════
+   ZAMANLAMA
+═══════════════════════════════════════ */
+function onTgtSlide(v){
+  A.targetSoc=parseInt(v);
+  document.getElementById('tgtVal').textContent='%'+v;
+  document.getElementById('tgtRange').style.setProperty('--pct',Math.round((v-20)/80*100)+'%');
+  updateRing();
+}
+function addSchedule(){
+  var st=document.getElementById('tStart').value,et=document.getElementById('tEnd').value;
+  var tgt=document.getElementById('tgtVal').textContent;
+  var days=[];
+  document.querySelectorAll('#daysRow .db.active').forEach(function(b){days.push(b.textContent);});
+  if(!days.length){toast('En az bir gün seçin','error');return;}
+  var div=document.createElement('div');div.className='sch-item';
+  div.innerHTML='<div><div class="sch-time">'+st+' → '+et+'</div><div class="sch-days">'+days.join(' · ')+' · '+tgt+' · '+A.amp+'A/faz</div></div>'
+    +'<div style="display:flex;align-items:center;gap:7px"><label class="tog"><input type="checkbox" checked><span class="tog-sl"></span></label>'
+    +'<button class="del-btn" onclick="this.closest(\'.sch-item\').remove();toast(\'Silindi\',\'warn\')">SİL</button></div>';
+  document.getElementById('schedList').insertBefore(div,document.getElementById('schedList').firstChild);
+  toast('⏰ Eklendi: '+st+' → '+et,'success');
+}
+
+/* ═══════════════════════════════════════
+   GEÇMİŞ
+═══════════════════════════════════════ */
+function addHist(item){
+  var p=parseFloat(document.getElementById('priceIn').value)||A.unitPrice;
+  A.history.unshift({t:item.t,title:item.title,sub:new Date().toLocaleString('tr'),kwh:item.energy.toFixed(2),cost:(item.energy*p).toFixed(2)});
+  if(A.history.length>200)A.history.pop();
+  saveStore();
+}
+function setFilt(btn,f){
+  A.histFilter=f;
+  document.querySelectorAll('.hfb').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');renderHist();
+}
+function renderHist(){
+  renderChart();
+  var cont=document.getElementById('histCont');cont.innerHTML='';
+  var list=A.histFilter==='all'?A.history:A.history.filter(function(h){return h.t===A.histFilter;});
+  if(!list.length){cont.innerHTML='<div style="text-align:center;padding:24px;color:var(--text3);font-size:.82rem">Kayıt bulunamadı</div>';return;}
+  var icls={c:'hi-c',s:'hi-s',x:'hi-x'},icos={c:'⚡',s:'🕐',x:'🛑'};
+  for(var i=0;i<list.length;i++){
+    var h=list[i],div=document.createElement('div');div.className='hist-item';
+    div.innerHTML='<div class="h-ico '+(icls[h.t]||'hi-c')+'">'+(icos[h.t]||'⚡')+'</div>'
+      +'<div class="h-body"><div class="h-title">'+h.title+'</div><div class="h-sub">'+h.sub+'</div></div>'
+      +'<div class="h-meta"><div class="h-kwh">'+h.kwh+' kWh</div><div class="h-cost">'+h.cost+' ₺</div></div>';
+    cont.appendChild(div);
+  }
+}
+function renderChart(){
+  var now=new Date();now.setMonth(now.getMonth()+A.monthOffset);
+  var y=now.getFullYear(),m=now.getMonth(),days=new Date(y,m+1,0).getDate();
+  document.getElementById('monthT').textContent=MONTHS[m]+' '+y;
+  var dayData={};for(var d=1;d<=days;d++)dayData[d]=0;
+  A.history.forEach(function(h){var dt=new Date(h.sub);if(dt.getFullYear()===y&&dt.getMonth()===m){dayData[dt.getDate()]=(dayData[dt.getDate()]||0)+parseFloat(h.kwh);}});
+  if(A.history.length===0){for(var i=1;i<=days;i++){var s=(y*100+m+i)%31;dayData[i]=s<3?0:Math.round((s*.9+Math.random()*4)*10)/10;}}
+  var max=1,total=0,sessions=0;
+  for(var d=1;d<=days;d++){if(dayData[d]>max)max=dayData[d];total+=dayData[d];if(dayData[d]>0)sessions++;}
+  document.getElementById('csTot').textContent=total.toFixed(1)+' kWh';
+  document.getElementById('csCost').textContent=(total*A.unitPrice).toFixed(1)+' ₺';
+  document.getElementById('csSeans').textContent=sessions;
+  var chart=document.getElementById('dayChart');chart.innerHTML='';
+  var mn=MONTHS[m].slice(0,3);
+  for(var d=1;d<=days;d++){var w=document.createElement('div');w.className='dc-col';var b=document.createElement('div');b.className='dc-bar';b.style.height=(dayData[d]>0?Math.max(5,dayData[d]/max*60):3)+'px';b.title=d+' '+mn+': '+dayData[d]+' kWh';var l=document.createElement('div');l.className='dc-lbl';l.textContent=d%5===1?d:'';w.appendChild(b);w.appendChild(l);chart.appendChild(w);}
+}
+function prevMonth(){A.monthOffset--;renderChart();}
+function nextMonth(){if(A.monthOffset<0){A.monthOffset++;renderChart();}else toast('Bu en güncel ay','info');}
+function clearHist(){if(!confirm('Tüm geçmiş silinsin mi?'))return;A.history=[];saveStore();renderHist();toast('Geçmiş silindi','warn');}
+function sendMail(){var a=document.getElementById('mailAddr').value;if(!a||a.indexOf('@')<0){toast('Geçerli mail girin','error');return;}toast('📧 Gönderiliyor...','info');setTimeout(function(){toast('✅ Mail gönderildi!','success');},1400);}
+function expData(f){
+  if(f==='csv'){var lines=['Tarih,Başlık,kWh,Maliyet'];A.history.forEach(function(h){lines.push(h.sub+','+h.title+','+h.kwh+','+h.cost);});var a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(lines.join('\n'));a.download='acamay-ev-sarj-'+new Date().toISOString().slice(0,10)+'.csv';a.click();toast('📊 CSV indirildi','success');}
+  else if(f==='json'){var a=document.createElement('a');a.href='data:application/json;charset=utf-8,'+encodeURIComponent(JSON.stringify(A.history,null,2));a.download='acamay-ev-sarj.json';a.click();toast('🗂️ JSON indirildi','success');}
+  else toast(f.toUpperCase()+' hazırlanıyor...','info');
+}
+
+/* ═══════════════════════════════════════
+   AYARLAR
+═══════════════════════════════════════ */
+function saveSettings(){
+  A.key=document.getElementById('cfgKey').value.trim();
+  A.secret=document.getElementById('cfgSecret').value.trim();
+  A.devId=document.getElementById('cfgDev').value.trim();
+  A.region=document.getElementById('cfgRegion').value.trim()||'eu';
+  A.batKwh=parseFloat(document.getElementById('setBat').value)||80;
+  A.soc=parseFloat(document.getElementById('setSoc').value)||A.soc;
+  A.targetSoc=parseFloat(document.getElementById('setTgt').value)||80;
+  A.unitPrice=parseFloat(document.getElementById('setPrice').value)||2.5;
+  A.token=null;
+  document.getElementById('priceIn').value=A.unitPrice.toFixed(2);
+  saveStore();updateRing();recalcCost();
+  toast('✅ Ayarlar kaydedildi! Bağlanılıyor...','success');
+  setTimeout(startPolling,600);
+}
+
+/* ═══════════════════════════════════════
+   TOAST
+═══════════════════════════════════════ */
+var tT=null;
+function toast(msg,type){
+  if(!type)type='info';
+  var el=document.getElementById('toastEl');
+  el.textContent=msg;el.className='toast '+type+' show';
+  clearTimeout(tT);tT=setTimeout(function(){el.classList.remove('show');},3500);
+}
+
+/* ═══════════════════════════════════════
+   POLLING
+═══════════════════════════════════════ */
+function startPolling(){
+  if(A.pollTimer)clearInterval(A.pollTimer);
+  fetchStatus();
+  A.pollTimer=setInterval(fetchStatus,5000);
+}
+
+/* ═══════════════════════════════════════
+   BAŞLATMA
+═══════════════════════════════════════ */
+function init(){
+  loadStore();
+  document.body.classList.toggle('light',!A.darkMode);
+  document.getElementById('themeBtn').textContent=A.darkMode?'🌙':'☀️';
+  updateAmpUI(A.amp,false);
+  document.getElementById('ampSlider').value=A.amp;
+  document.getElementById('tgtRange').value=A.targetSoc;
+  onTgtSlide(A.targetSoc);
+  document.getElementById('priceIn').value=A.unitPrice.toFixed(2);
+  document.getElementById('setSoc').value=A.soc;
+  document.getElementById('setBat').value=A.batKwh;
+  document.getElementById('setTgt').value=A.targetSoc;
+  document.getElementById('setPrice').value=A.unitPrice.toFixed(2);
+  document.getElementById('cfgKey').value=A.key;
+  document.getElementById('cfgSecret').value=A.secret;
+  document.getElementById('cfgDev').value=A.devId;
+  updateRing();recalcCost();
+  setConn('off');
+  startPolling();
+}
+init();
+</script>
+</body>
+</html>

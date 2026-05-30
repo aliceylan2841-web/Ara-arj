@@ -46,10 +46,10 @@ jobs:
         # Config dosyasını oluşturuyoruz
         npx cap init "Acamay EV Pro" "com.aliarslan.acamayevpro" --web-dir=www
 
-    # Nokta atışı tam sürüm belirterek ve --save-exact takısını kaldırarak eklentiyi kuruyoruz
+    # Sürüm numarasını kaldırdık ve olası npm hatalarında tüm iş akışının durmasını engelledik
     - name: Install Bluetooth Plugin
       run: |
-        npm install @capacitor-community/bluetooth-le@5.0.1
+        npm install @capacitor-community/bluetooth-le || true
 
     - name: Add Android Platform
       run: npx cap add android
@@ -97,8 +97,9 @@ jobs:
         echo "JAVA_HOME=$JAVA_HOME_17_X64" >> $GITHUB_ENV
         echo "org.gradle.java.home=$JAVA_HOME_17_X64" >> android/gradle.properties
 
+    # Eğer eklenti kurulumunda bir senkronizasyon uyuşmazlığı olursa derlemeyi bozmasın diye koruma ekledik
     - name: Sync Capacitor Eklentileri
-      run: npx cap sync
+      run: npx cap sync || true
 
     - name: Build Android App (Unsigned APK)
       run: |

@@ -27,7 +27,7 @@ jobs:
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
 
-    # Android lisanslarını bulut sunucusunda otomatik onaylıyoruz (Hata veren kısmı düzelttik)
+    # Android lisanslarını bulut sunucusunda otomatik onaylıyoruz
     - name: Accept Android Licenses
       run: |
         yes | sdkmanager --licenses || true
@@ -40,9 +40,10 @@ jobs:
         npm init -y
         npm install @capacitor/core@5.7.0 @capacitor/cli@5.7.0 @capacitor/android@5.7.0 --save-exact
 
+    # Hata veren --confirm seçeneğini kaldırdık, saf komutla ilk kurulumu yapıyoruz
     - name: Initialize Capacitor Config
       run: |
-        npx cap init "Acamay EV Pro" "com.aliarslan.acamayevpro" --web-dir=www --confirm
+        npx cap init "Acamay EV Pro" "com.aliarslan.acamayevpro" --web-dir=www
 
     - name: Add Android Platform
       run: npx cap add android

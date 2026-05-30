@@ -37,18 +37,23 @@ jobs:
         mkdir -p www
         [ ! -f www/index.html ] && echo "<html><body>Acamay EV Pro</body></html>" > www/index.html || true
         npm init -y
-        # 1. SORUNUN ÇÖZÜMÜ: Bluetooth LE ve Native soketler için gerekli eklentileri kuruyoruz
+        # Temel paketleri kuruyoruz
         npm install @capacitor/core@5.7.0 @capacitor/cli@5.7.0 @capacitor/android@5.7.0 --save-exact
-        npm install @capacitor-community/bluetooth-le@5.2.0 --save-exact
 
     - name: Initialize Capacitor Config
       run: |
+        # Config dosyasını oluşturuyoruz
         npx cap init "Acamay EV Pro" "com.aliarslan.acamayevpro" --web-dir=www
+
+    # Sürüm hatası veren Bluetooth eklentisini Capacitor 5 ile uyumlu en kararlı ana sürüme bırakarak kuruyoruz
+    - name: Install Bluetooth Plugin
+      run: |
+        npm install @capacitor-community/bluetooth-le@5 --save-exact
 
     - name: Add Android Platform
       run: npx cap add android
 
-    # 3. SORUNUN ÇÖZÜMÜ: androidScheme ayarını HTTPS yerine HTTP yaparak yerel ağ (LAN) engellerini kaldırıyoruz
+    # 3. SORUNUN ÇÖZÜMÜ: androidScheme ayarını HTTP yaparak yerel ağ (LAN) engellerini kaldırıyoruz
     - name: Fix Capacitor Config (Set HTTP Scheme)
       run: |
         if [ -f capacitor.config.json ]; then
@@ -62,12 +67,10 @@ jobs:
       run: |
         MANIFEST_PATH="android/app/src/main/AndroidManifest.xml"
         if [ -f "$MANIFEST_PATH" ]; then
-          # Gerekli tüm izin satırlarını manifest dosyasının uygun yerine ekliyoruz
           PERMISSIONS="<uses-permission android:name=\"android.permission.INTERNET\" />\n  <uses-permission android:name=\"android.permission.ACCESS_NETWORK_STATE\" />\n  <uses-permission android:name=\"android.permission.ACCESS_WIFI_STATE\" />\n  <uses-permission android:name=\"android.permission.CHANGE_WIFI_MULTICAST_STATE\" />\n  <uses-permission android:name=\"android.permission.BLUETOOTH\" />\n  <uses-permission android:name=\"android.permission.BLUETOOTH_ADMIN\" />\n  <uses-permission android:name=\"android.permission.BLUETOOTH_SCAN\" />\n  <uses-permission android:name=\"android.permission.BLUETOOTH_CONNECT\" />\n  <uses-permission android:name=\"android.permission.ACCESS_FINE_LOCATION\" />"
           sed -i "/<manifest/a \  $PERMISSIONS" "$MANIFEST_PATH"
           
-          # HTTP trafiğine izin vermek için usesCleartextTraffic ayarını aktifleştiriyoruz
-          sed -i 's/<application/<application android:usesCleartextTraffic="true"/g' "$MANIFEST_PATH"
+          sed -i 's/<application/<application android:usesCleartextTraffic=\"true\"/g' "$MANIFEST_PATH"
           echo "Android İzinleri ve Ağ Güvenlik Ayarları Tamamlandı."
         fi
 

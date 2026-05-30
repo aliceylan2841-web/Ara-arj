@@ -43,10 +43,8 @@ jobs:
 
     - name: Initialize Capacitor Config
       run: |
-        # Config dosyasını oluşturuyoruz
         npx cap init "Acamay EV Pro" "com.aliarslan.acamayevpro" --web-dir=www
 
-    # Sürüm numarasını kaldırdık ve olası npm hatalarında tüm iş akışının durmasını engelledik
     - name: Install Bluetooth Plugin
       run: |
         npm install @capacitor-community/bluetooth-le || true
@@ -75,20 +73,34 @@ jobs:
           echo "Android İzinleri ve Ağ Güvenlik Ayarları Tamamlandı."
         fi
 
-    # Görselleri klasörlere gömüyoruz
-    - name: Inject Custom App Icons & Splash
+    # LOGO SORUNUNUN KESİN ÇÖZÜMÜ: Tüm ekran boyutlarındaki klasörlere ikonları tek tek gömüyoruz
+    - name: Inject Custom App Icons & Splash to All Resolutions
       run: |
+        # Tüm mipmap klasörlerini tek tek oluşturup garantiliyoruz
         mkdir -p android/app/src/main/res/mipmap-mdpi
+        mkdir -p android/app/src/main/res/mipmap-hdpi
+        mkdir -p android/app/src/main/res/mipmap-xhdpi
+        mkdir -p android/app/src/main/res/mipmap-xxhdpi
+        mkdir -p android/app/src/main/res/mipmap-xxxhdpi
         mkdir -p android/app/src/main/res/drawable
         
+        # Eğer senin yüklediğin icon.png varsa bütün bu alt sistem klasörlerinin üzerine zorla yazdırıyoruz
         if [ -f icon.png ]; then
-          cp icon.png android/app/src/main/res/mipmap-mdpi/ic_launcher.png
-          cp icon.png android/app/src/main/res/mipmap-mdpi/ic_launcher_round.png
-          echo "Uygulama ikonu başarıyla enjekte edildi."
+          cp -f icon.png android/app/src/main/res/mipmap-mdpi/ic_launcher.png
+          cp -f icon.png android/app/src/main/res/mipmap-mdpi/ic_launcher_round.png
+          cp -f icon.png android/app/src/main/res/mipmap-hdpi/ic_launcher.png
+          cp -f icon.png android/app/src/main/res/mipmap-hdpi/ic_launcher_round.png
+          cp -f icon.png android/app/src/main/res/mipmap-xhdpi/ic_launcher.png
+          cp -f icon.png android/app/src/main/res/mipmap-xhdpi/ic_launcher_round.png
+          cp -f icon.png android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png
+          cp -f icon.png android/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png
+          cp -f icon.png android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
+          cp -f icon.png android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png
+          echo "Uygulama ikonu tüm çözünürlükler için sisteme işlendi."
         fi
         
         if [ -f splash.png ]; then
-          cp splash.png android/app/src/main/res/drawable/splash.png
+          cp -f splash.png android/app/src/main/res/drawable/splash.png
           echo "Açılış ekranı başarıyla enjekte edildi."
         fi
 
@@ -97,7 +109,6 @@ jobs:
         echo "JAVA_HOME=$JAVA_HOME_17_X64" >> $GITHUB_ENV
         echo "org.gradle.java.home=$JAVA_HOME_17_X64" >> android/gradle.properties
 
-    # Eğer eklenti kurulumunda bir senkronizasyon uyuşmazlığı olursa derlemeyi bozmasın diye koruma ekledik
     - name: Sync Capacitor Eklentileri
       run: npx cap sync || true
 

@@ -33,23 +33,28 @@ jobs:
       run: |
         rm -rf android package.json package-lock.json node_modules .gradle
         npm init -y
-        # cordova-res paketini otomatik ikon üretimi için kuruyoruz
-        npm install @capacitor/core@5.7.0 @capacitor/cli@5.7.0 @capacitor/android@5.7.0 cordova-res --save-exact
+        # cordova-res ve gerekli bağımlılıkları güvenli sürümlerle kuruyoruz
+        npm install @capacitor/core@5.7.0 @capacitor/cli@5.7.0 @capacitor/android@5.7.0 --save-exact
+        npm install cordova-res --global
 
     - name: Initialize Capacitor Config
       run: |
-        npx cap init "Acamay EV Pro" "com.aliarslan.acamayevpro" --web-dir=www
+        npx cap init "Acamay EV Pro" "com.aliarslan.acamayevpro" --web-dir=www --confirm
 
     - name: Add Android Platform
       run: npx cap add android
 
-    # Sihirli Adım: Yüklediğin icon.png ve splash.png dosyalarını Android sistemine gömüyoruz
+    # Kaynak klasörlerini garantiye alıp ikon üretimini sağlama alıyoruz
     - name: Generate Icons and Splash Screens
       run: |
         mkdir -p resources
-        [ -f icon.png ] && cp icon.png resources/icon.png || true
-        [ -f splash.png ] && cp splash.png resources/splash.png || true
-        npx cordova-res android --skip-config --copy
+        [ -f icon.png ] && cp icon.png resources/icon.png || echo "icon.png bulunamadı"
+        [ -f splash.png ] && cp splash.png resources/splash.png || echo "splash.png bulunamadı"
+        if [ -f resources/icon.png ] && [ -f resources/splash.png ]; then
+          cordova-res android --skip-config --copy
+        else
+          echo "Görseller eksik olduğu için varsayılan ikonlarla devam ediliyor."
+        fi
 
     - name: Set JAVA_HOME for Gradle
       run: |

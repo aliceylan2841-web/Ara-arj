@@ -1,4 +1,4 @@
-name: Build Android APK (Capacitor)
+name: Build Android APK (Capacitor Native Fixes)
 
 on:
   push:
@@ -27,7 +27,6 @@ jobs:
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
 
-    # Android lisanslarını bulut sunucusunda otomatik onaylıyoruz
     - name: Accept Android Licenses
       run: |
         yes | sdkmanager --licenses || true
@@ -38,9 +37,10 @@ jobs:
         mkdir -p www
         [ ! -f www/index.html ] && echo "<html><body>Acamay EV Pro</body></html>" > www/index.html || true
         npm init -y
+        # 1. SORUNUN ÇÖZÜMÜ: Bluetooth LE ve Native soketler için gerekli eklentileri kuruyoruz
         npm install @capacitor/core@5.7.0 @capacitor/cli@5.7.0 @capacitor/android@5.7.0 --save-exact
+        npm install @capacitor-community/bluetooth-le@5.2.0 --save-exact
 
-    # Hata veren --confirm seçeneğini kaldırdık, saf komutla ilk kurulumu yapıyoruz
     - name: Initialize Capacitor Config
       run: |
         npx cap init "Acamay EV Pro" "com.aliarslan.acamayevpro" --web-dir=www
@@ -48,7 +48,30 @@ jobs:
     - name: Add Android Platform
       run: npx cap add android
 
-    # Yüklediğin harika logoyu Android sistem klasörlerine gömüyoruz
+    # 3. SORUNUN ÇÖZÜMÜ: androidScheme ayarını HTTPS yerine HTTP yaparak yerel ağ (LAN) engellerini kaldırıyoruz
+    - name: Fix Capacitor Config (Set HTTP Scheme)
+      run: |
+        if [ -f capacitor.config.json ]; then
+          sed -i 's/"androidScheme": "https"/"androidScheme": "http"/g' capacitor.config.json
+          sed -i 's/"cleartext": false/"cleartext": true/g' capacitor.config.json || true
+          echo "Capacitor şeması HTTP olarak güncellendi."
+        fi
+
+    # 4. SORUNUN ÇÖZÜMÜ: AndroidManifest.xml içine Bluetooth, Wi-Fi ve İnternet izinlerini enjekte ediyoruz
+    - name: Inject Native Permissions & Network Security
+      run: |
+        MANIFEST_PATH="android/app/src/main/AndroidManifest.xml"
+        if [ -f "$MANIFEST_PATH" ]; then
+          # Gerekli tüm izin satırlarını manifest dosyasının uygun yerine ekliyoruz
+          PERMISSIONS="<uses-permission android:name=\"android.permission.INTERNET\" />\n  <uses-permission android:name=\"android.permission.ACCESS_NETWORK_STATE\" />\n  <uses-permission android:name=\"android.permission.ACCESS_WIFI_STATE\" />\n  <uses-permission android:name=\"android.permission.CHANGE_WIFI_MULTICAST_STATE\" />\n  <uses-permission android:name=\"android.permission.BLUETOOTH\" />\n  <uses-permission android:name=\"android.permission.BLUETOOTH_ADMIN\" />\n  <uses-permission android:name=\"android.permission.BLUETOOTH_SCAN\" />\n  <uses-permission android:name=\"android.permission.BLUETOOTH_CONNECT\" />\n  <uses-permission android:name=\"android.permission.ACCESS_FINE_LOCATION\" />"
+          sed -i "/<manifest/a \  $PERMISSIONS" "$MANIFEST_PATH"
+          
+          # HTTP trafiğine izin vermek için usesCleartextTraffic ayarını aktifleştiriyoruz
+          sed -i 's/<application/<application android:usesCleartextTraffic="true"/g' "$MANIFEST_PATH"
+          echo "Android İzinleri ve Ağ Güvenlik Ayarları Tamamlandı."
+        fi
+
+    # Görselleri klasörlere gömüyoruz
     - name: Inject Custom App Icons & Splash
       run: |
         mkdir -p android/app/src/main/res/mipmap-mdpi
@@ -58,15 +81,11 @@ jobs:
           cp icon.png android/app/src/main/res/mipmap-mdpi/ic_launcher.png
           cp icon.png android/app/src/main/res/mipmap-mdpi/ic_launcher_round.png
           echo "Uygulama ikonu başarıyla enjekte edildi."
-        else
-          echo "icon.png bulunamadı, varsayılan ikon kullanılacak."
         fi
         
         if [ -f splash.png ]; then
           cp splash.png android/app/src/main/res/drawable/splash.png
           echo "Açılış ekranı başarıyla enjekte edildi."
-        else
-          echo "splash.png bulunamadı."
         fi
 
     - name: Set JAVA_HOME for Gradle
@@ -74,8 +93,8 @@ jobs:
         echo "JAVA_HOME=$JAVA_HOME_17_X64" >> $GITHUB_ENV
         echo "org.gradle.java.home=$JAVA_HOME_17_X64" >> android/gradle.properties
 
-    - name: Copy Web Files to Android Studio Project
-      run: npx cap copy
+    - name: Sync Capacitor Eklentileri
+      run: npx cap sync
 
     - name: Build Android App (Unsigned APK)
       run: |
@@ -86,5 +105,5 @@ jobs:
     - name: Upload Finished APK
       uses: actions/upload-artifact@v4
       with:
-        name: Acamay-EV-Pro-Debug-APK
+        name: Acamay-EV-Pro-Full-Native-APK
         path: android/app/build/outputs/apk/debug/app-debug.apk

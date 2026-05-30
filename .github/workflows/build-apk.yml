@@ -32,10 +32,11 @@ jobs:
     - name: Clean and Initialize Project
       run: |
         rm -rf android package.json package-lock.json node_modules .gradle
+        mkdir -p www
+        # Eğer www klasörü boşsa Capacitor hata vermesin diye geçici bir index.html oluşturuyoruz
+        [ ! -f www/index.html ] && echo "<html><body>Acamay EV Pro</body></html>" > www/index.html || true
         npm init -y
-        # cordova-res ve gerekli bağımlılıkları güvenli sürümlerle kuruyoruz
         npm install @capacitor/core@5.7.0 @capacitor/cli@5.7.0 @capacitor/android@5.7.0 --save-exact
-        npm install cordova-res --global
 
     - name: Initialize Capacitor Config
       run: |
@@ -44,16 +45,27 @@ jobs:
     - name: Add Android Platform
       run: npx cap add android
 
-    # Kaynak klasörlerini garantiye alıp ikon üretimini sağlama alıyoruz
-    - name: Generate Icons and Splash Screens
+    # Garanti Yöntem: Görselleri sistemin doğrudan okuyabileceği ana klasörlere yerleştiriyoruz
+    - name: Inject Custom App Icons & Splash
       run: |
-        mkdir -p resources
-        [ -f icon.png ] && cp icon.png resources/icon.png || echo "icon.png bulunamadı"
-        [ -f splash.png ] && cp splash.png resources/splash.png || echo "splash.png bulunamadı"
-        if [ -f resources/icon.png ] && [ -f resources/splash.png ]; then
-          cordova-res android --skip-config --copy
+        mkdir -p android/app/src/main/res/mipmap-mdpi
+        mkdir -p android/app/src/main/res/drawable
+        
+        # İkon yüklenmişse Android'in ana ikon dosyasıyla (ic_launcher.png) değiştiriyoruz
+        if [ -f icon.png ]; then
+          cp icon.png android/app/src/main/res/mipmap-mdpi/ic_launcher.png
+          cp icon.png android/app/src/main/res/mipmap-mdpi/ic_launcher_round.png
+          echo "Uygulama ikonu başarıyla enjekte edildi."
         else
-          echo "Görseller eksik olduğu için varsayılan ikonlarla devam ediliyor."
+          echo "icon.png bulunamadı, varsayılan ikon kullanılacak."
+        fi
+        
+        # Splash yüklenmişse arka plan görseli olarak ayarlıyoruz
+        if [ -f splash.png ]; then
+          cp splash.png android/app/src/main/res/drawable/splash.png
+          echo "Açılış ekranı başarıyla enjekte edildi."
+        else
+          echo "splash.png bulunamadı."
         fi
 
     - name: Set JAVA_HOME for Gradle

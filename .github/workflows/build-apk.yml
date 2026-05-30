@@ -18,20 +18,26 @@ jobs:
       with:
         node-version: 18
 
-    - name: Set up JDK 17 (Required for Android)
+    - name: Set up JDK 17 (Required for Android Gradle)
       uses: actions/setup-java@v4
       with:
         distribution: 'zulu'
         java-version: '17'
+        cache: 'gradle'
 
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
+
+    # Hatanın çözümü burası: Gradle'a Java 17 yolunu ortam değişkeni olarak kesin bir şekilde öğretiyoruz
+    - name: Set JAVA_HOME for Gradle
+      run: |
+        echo "JAVA_HOME=$JAVA_HOME_17_X64" >> $GITHUB_ENV
+        echo "org.gradle.java.home=$JAVA_HOME_17_X64" >> android/gradle.properties 2>/dev/null || true
 
     - name: Initialize Project and Install Capacitor
       run: |
         npm init -y
         npm install @capacitor/core @capacitor/cli @capacitor/android
-        # Capacitor'ı yapılandırıyoruz. Giriş dosyasını kök dizin (root) olarak ayarlıyoruz.
         npx cap init "Acamay EV Pro" "com.aliarslan.acamayevpro" --web-dir=.
 
     - name: Add Android Platform
@@ -43,8 +49,9 @@ jobs:
     - name: Build Android App (Unsigned APK)
       run: |
         cd android
-        ./gradlew assembleDebug
-
+        chmod +x gradlew
+        ./gradlew assembleDebug --no-daemon
+        
     - name: Upload Finished APK
       uses: actions/upload-artifact@v4
       with:

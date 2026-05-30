@@ -24,16 +24,18 @@ jobs:
         distribution: 'zulu'
         java-version: '17'
 
-    - name: Setup Android SDK & Accept Licenses Automatically
+    - name: Setup Android SDK
       uses: android-actions/setup-android@v3
-      with:
-        log-accepted-licenses: true
+
+    # Android lisanslarını bulut sunucusunda otomatik onaylıyoruz (Hata veren kısmı düzelttik)
+    - name: Accept Android Licenses
+      run: |
+        yes | sdkmanager --licenses || true
 
     - name: Clean and Initialize Project
       run: |
         rm -rf android package.json package-lock.json node_modules .gradle
         mkdir -p www
-        # Eğer www klasörü boşsa Capacitor hata vermesin diye geçici bir index.html oluşturuyoruz
         [ ! -f www/index.html ] && echo "<html><body>Acamay EV Pro</body></html>" > www/index.html || true
         npm init -y
         npm install @capacitor/core@5.7.0 @capacitor/cli@5.7.0 @capacitor/android@5.7.0 --save-exact
@@ -45,13 +47,12 @@ jobs:
     - name: Add Android Platform
       run: npx cap add android
 
-    # Garanti Yöntem: Görselleri sistemin doğrudan okuyabileceği ana klasörlere yerleştiriyoruz
+    # Yüklediğin harika logoyu Android sistem klasörlerine gömüyoruz
     - name: Inject Custom App Icons & Splash
       run: |
         mkdir -p android/app/src/main/res/mipmap-mdpi
         mkdir -p android/app/src/main/res/drawable
         
-        # İkon yüklenmişse Android'in ana ikon dosyasıyla (ic_launcher.png) değiştiriyoruz
         if [ -f icon.png ]; then
           cp icon.png android/app/src/main/res/mipmap-mdpi/ic_launcher.png
           cp icon.png android/app/src/main/res/mipmap-mdpi/ic_launcher_round.png
@@ -60,7 +61,6 @@ jobs:
           echo "icon.png bulunamadı, varsayılan ikon kullanılacak."
         fi
         
-        # Splash yüklenmişse arka plan görseli olarak ayarlıyoruz
         if [ -f splash.png ]; then
           cp splash.png android/app/src/main/res/drawable/splash.png
           echo "Açılış ekranı başarıyla enjekte edildi."
@@ -75,12 +75,6 @@ jobs:
 
     - name: Copy Web Files to Android Studio Project
       run: npx cap copy
-
-    - name: Final Android Licenses Sync
-      run: |
-        cd android
-        mkdir -p -v "$ANDROID_HOME/licenses"
-        yes | sdkmanager --licenses || true
 
     - name: Build Android App (Unsigned APK)
       run: |

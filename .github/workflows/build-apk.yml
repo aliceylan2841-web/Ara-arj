@@ -23,24 +23,28 @@ jobs:
       with:
         distribution: 'zulu'
         java-version: '17'
-        # Önbellek hatasını engellemek için cache kısmını tamamen kaldırdık
 
     - name: Setup Android SDK & Accept Licenses Automatically
       uses: android-actions/setup-android@v3
       with:
         log-accepted-licenses: true
 
-    - name: Install Dependencies & Configure Capacitor
+    # Hataları önlemek için tüm eski bağımlılıkları, kilitleri ve ara klasörleri tamamen temizliyoruz
+    - name: Clean and Initialize Project
       run: |
-        rm -rf android package.json package-lock.json node_modules
+        rm -rf android package.json package-lock.json node_modules .gradle
         npm init -y
-        npm install @capacitor/core@5 @capacitor/cli@5
-        npm install @capacitor/android@5
+        npm install @capacitor/core@5.7.0 @capacitor/cli@5.7.0 @capacitor/android@5.7.0 --save-exact
+
+    # Capacitor projesini ayağa kaldırıyoruz
+    - name: Initialize Capacitor Config
+      run: |
         npx cap init "Acamay EV Pro" "com.aliarslan.acamayevpro" --web-dir=.
 
-    - name: Add Android Platform Fresh
+    - name: Add Android Platform
       run: npx cap add android
 
+    # Gradle motoruna Java 17 kullanacağını kesin bir dille dikte ediyoruz
     - name: Set JAVA_HOME for Gradle
       run: |
         echo "JAVA_HOME=$JAVA_HOME_17_X64" >> $GITHUB_ENV
@@ -55,10 +59,11 @@ jobs:
         mkdir -p -v "$ANDROID_HOME/licenses"
         yes | sdkmanager --licenses || true
 
+    # İzin hatası (Exit Code 1) oluşmaması için çalıştırma yetkilerini (chmod) en üst düzeye çekiyoruz
     - name: Build Android App (Unsigned APK)
       run: |
         cd android
-        chmod +x gradlew
+        chmod -R 777 gradlew
         ./gradlew assembleDebug --no-daemon
         
     - name: Upload Finished APK

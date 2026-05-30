@@ -28,7 +28,14 @@ jobs:
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
 
-    # Bağımlılıkları ve Capacitor dosyalarını tek seferde, pürüzsüz kuruyoruz
+    # Hatanın Çözümü: Tüm Android SDK lisanslarını bulutta otomatik olarak kabul ediyoruz
+    - name: Accept Android SDK Licenses
+      run: |
+        mkdir -p -v "$ANDROID_HOME/licenses"
+        echo -e "\n24333f8a63b6825ea9c5514f83c2829b004d1fee" > "$ANDROID_HOME/licenses/android-sdk-license"
+        echo -e "\n84831b9409646a918e30573bab4c9c91346d8abd" > "$ANDROID_HOME/licenses/android-sdk-preview-license"
+        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
+
     - name: Install Dependencies & Configure Capacitor
       run: |
         rm -rf android package.json package-lock.json node_modules
@@ -40,7 +47,6 @@ jobs:
     - name: Add Android Platform Fresh
       run: npx cap add android
 
-    # Java 17 yolunu Android projesine kesin olarak dikte ediyoruz
     - name: Set JAVA_HOME for Gradle
       run: |
         echo "JAVA_HOME=$JAVA_HOME_17_X64" >> $GITHUB_ENV

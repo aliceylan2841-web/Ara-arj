@@ -1,144 +1,113 @@
 name: Build Android APK (Capacitor Native Fixes)
 
 on:
-push:
-branches:
-- main
-- master
-workflow_dispatch:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
 
 jobs:
-build:
-runs-on: ubuntu-latest
+  build:
+    runs-on: ubuntu-latest
 
+    steps:
+    - name: Checkout Source Code
+      uses: actions/checkout@v4
 
-steps:
-  - name: Checkout Source Code
-    uses: actions/checkout@v4
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 18
 
-  - name: Setup Node.js
-    uses: actions/setup-node@v4
-    with:
-      node-version: 18
+    - name: Set up JDK 17 (Required for Android Gradle)
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'zulu'
+        java-version: '17'
 
-  - name: Setup Java 17
-    uses: actions/setup-java@v4
-    with:
-      distribution: zulu
-      java-version: 17
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
 
-  - name: Setup Android SDK
-    uses: android-actions/setup-android@v3
+    # Android lisanslarını bulut sunucusunda otomatik onaylıyoruz
+    - name: Accept Android Licenses
+      run: |
+        yes | sdkmanager --licenses || true
 
-  - name: Accept Android Licenses
-    run: |
-      yes | sdkmanager --licenses || true
-
-  - name: Clean Project
-    run: |
-      rm -rf android node_modules
-
-  - name: Create WWW Folder
-    run: |
-      mkdir -p www
-      if [ ! -f www/index.html ]; then
-        echo "<html><body><h1>Acamay EV Pro</h1></body></html>" > www/index.html
-      fi
-
-  - name: Create Package.json if Missing
-    run: |
-      if [ ! -f package.json ]; then
+    - name: Clean and Initialize Project
+      run: |
+        rm -rf android package.json package-lock.json node_modules .gradle
+        mkdir -p www
+        [ ! -f www/index.html ] && echo "<html><body>Acamay EV Pro</body></html>" > www/index.html || true
         npm init -y
-      fi
+        # Temel paketleri kuruyoruz
+        npm install @capacitor/core@5.7.0 @capacitor/cli@5.7.0 @capacitor/android@5.7.0 --save-exact
 
-  - name: Install Capacitor
-    run: |
-      npm install \
-      @capacitor/core@5.7.0 \
-      @capacitor/cli@5.7.0 \
-      @capacitor/android@5.7.0 \
-      --save-exact
-
-  - name: Capacitor Init
-    run: |
-      if [ ! -f capacitor.config.json ]; then
+    - name: Initialize Capacitor Config
+      run: |
+        # Config dosyasını oluşturuyoruz
         npx cap init "Acamay EV Pro" "com.aliarslan.acamayevpro" --web-dir=www
-      fi
 
-  - name: Install Bluetooth Plugin
-    run: |
-      npm install @capacitor-community/bluetooth-le@5.0.1
+    # Nokta atışı tam sürüm belirterek ve --save-exact takısını kaldırarak eklentiyi kuruyoruz
+    - name: Install Bluetooth Plugin
+      run: |
+        npm install @capacitor-community/bluetooth-le@5.0.1
 
-  - name: Add Android Platform
-    run: |
-      npx cap add android
+    - name: Add Android Platform
+      run: npx cap add android
 
-  - name: Configure Capacitor
-    run: |
-      cat > capacitor.config.json <<EOF
-      {
-        "appId": "com.aliarslan.acamayevpro",
-        "appName": "Acamay EV Pro",
-        "webDir": "www",
-        "server": {
-          "androidScheme": "http",
-          "cleartext": true
-        }
-      }
-      EOF
+    # 3. SORUNUN ÇÖZÜMÜ: androidScheme ayarını HTTP yaparak yerel ağ (LAN) engellerini kaldırıyoruz
+    - name: Fix Capacitor Config (Set HTTP Scheme)
+      run: |
+        if [ -f capacitor.config.json ]; then
+          sed -i 's/"androidScheme": "https"/"androidScheme": "http"/g' capacitor.config.json
+          sed -i 's/"cleartext": false/"cleartext": true/g' capacitor.config.json || true
+          echo "Capacitor şeması HTTP olarak güncellendi."
+        fi
 
-  - name: Add Android Permissions
-    run: |
-      MANIFEST="android/app/src/main/AndroidManifest.xml"
+    # 4. SORUNUN ÇÖZÜMÜ: AndroidManifest.xml içine Bluetooth, Wi-Fi ve İnternet izinlerini enjekte ediyoruz
+    - name: Inject Native Permissions & Network Security
+      run: |
+        MANIFEST_PATH="android/app/src/main/AndroidManifest.xml"
+        if [ -f "$MANIFEST_PATH" ]; then
+          PERMISSIONS="<uses-permission android:name=\"android.permission.INTERNET\" />\n  <uses-permission android:name=\"android.permission.ACCESS_NETWORK_STATE\" />\n  <uses-permission android:name=\"android.permission.ACCESS_WIFI_STATE\" />\n  <uses-permission android:name=\"android.permission.CHANGE_WIFI_MULTICAST_STATE\" />\n  <uses-permission android:name=\"android.permission.BLUETOOTH\" />\n  <uses-permission android:name=\"android.permission.BLUETOOTH_ADMIN\" />\n  <uses-permission android:name=\"android.permission.BLUETOOTH_SCAN\" />\n  <uses-permission android:name=\"android.permission.BLUETOOTH_CONNECT\" />\n  <uses-permission android:name=\"android.permission.ACCESS_FINE_LOCATION\" />"
+          sed -i "/<manifest/a \  $PERMISSIONS" "$MANIFEST_PATH"
+          
+          sed -i 's/<application/<application android:usesCleartextTraffic=\"true\"/g' "$MANIFEST_PATH"
+          echo "Android İzinleri ve Ağ Güvenlik Ayarları Tamamlandı."
+        fi
 
-      sed -i '/<manifest/a\
-      <uses-permission android:name="android.permission.INTERNET" />\
-      <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />\
-      <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />\
-      <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />\
-      <uses-permission android:name="android.permission.BLUETOOTH" />\
-      <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />\
-      <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />\
-      <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />\
-      <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />\
-      <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />' "$MANIFEST"
+    # Görselleri klasörlere gömüyoruz
+    - name: Inject Custom App Icons & Splash
+      run: |
+        mkdir -p android/app/src/main/res/mipmap-mdpi
+        mkdir -p android/app/src/main/res/drawable
+        
+        if [ -f icon.png ]; then
+          cp icon.png android/app/src/main/res/mipmap-mdpi/ic_launcher.png
+          cp icon.png android/app/src/main/res/mipmap-mdpi/ic_launcher_round.png
+          echo "Uygulama ikonu başarıyla enjekte edildi."
+        fi
+        
+        if [ -f splash.png ]; then
+          cp splash.png android/app/src/main/res/drawable/splash.png
+          echo "Açılış ekranı başarıyla enjekte edildi."
+        fi
 
-      sed -i 's/<application /<application android:usesCleartextTraffic="true" /' "$MANIFEST"
-
-  - name: Add Icons and Splash
-    run: |
-      mkdir -p android/app/src/main/res/mipmap-mdpi
-      mkdir -p android/app/src/main/res/drawable
-
-      if [ -f icon.png ]; then
-        cp icon.png android/app/src/main/res/mipmap-mdpi/ic_launcher.png
-        cp icon.png android/app/src/main/res/mipmap-mdpi/ic_launcher_round.png
-      fi
-
-      if [ -f splash.png ]; then
-        cp splash.png android/app/src/main/res/drawable/splash.png
-      fi
-
-  - name: Configure Gradle Java
-    run: |
-      if [ -n "$JAVA_HOME_17_X64" ]; then
+    - name: Set JAVA_HOME for Gradle
+      run: |
         echo "JAVA_HOME=$JAVA_HOME_17_X64" >> $GITHUB_ENV
         echo "org.gradle.java.home=$JAVA_HOME_17_X64" >> android/gradle.properties
-      fi
 
-  - name: Capacitor Sync
-    run: |
-      npx cap sync android
+    - name: Sync Capacitor Eklentileri
+      run: npx cap sync
 
-  - name: Build APK
-    run: |
-      cd android
-      chmod +x gradlew
-      ./gradlew assembleDebug --no-daemon
-
-  - name: Upload APK
-    uses: actions/upload-artifact@v4
-    with:
-      name: Acamay-EV-Pro-APK
-      path: android/app/build/outputs/apk/debug/app-debug.apk
-```
+    - name: Build Android App (Unsigned APK)
+      run: |
+        cd android
+        chmod -R +x gradlew
+        ./gradlew assembleDebug --no-daemon
+        
+    - name: Upload Finished APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: Acamay-EV-Pro-Full-Native-APK
+        path: android/app/build/outputs/apk/debug/app-debug.apk

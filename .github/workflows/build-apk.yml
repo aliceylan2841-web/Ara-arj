@@ -29,27 +29,27 @@ jobs:
       with:
         log-accepted-licenses: true
 
-    # Web dizinini izole etmek için www klasörünün varlığını garanti ediyoruz
-    - name: Ensure WWW Directory Exists
-      run: |
-        mkdir -p www
-        if [ ! -f www/index.html ] && [ -f index.html ]; then
-          cp index.html www/index.html
-        fi
-
     - name: Clean and Initialize Project
       run: |
         rm -rf android package.json package-lock.json node_modules .gradle
         npm init -y
-        npm install @capacitor/core@5.7.0 @capacitor/cli@5.7.0 @capacitor/android@5.7.0 --save-exact
+        # cordova-res paketini otomatik ikon üretimi için kuruyoruz
+        npm install @capacitor/core@5.7.0 @capacitor/cli@5.7.0 @capacitor/android@5.7.0 cordova-res --save-exact
 
-    # Bu sefer web klasörünü --web-dir=www olarak ayırıyoruz, böylece sistem kilitlenmiyor
     - name: Initialize Capacitor Config
       run: |
         npx cap init "Acamay EV Pro" "com.aliarslan.acamayevpro" --web-dir=www
 
     - name: Add Android Platform
       run: npx cap add android
+
+    # Sihirli Adım: Yüklediğin icon.png ve splash.png dosyalarını Android sistemine gömüyoruz
+    - name: Generate Icons and Splash Screens
+      run: |
+        mkdir -p resources
+        [ -f icon.png ] && cp icon.png resources/icon.png || true
+        [ -f splash.png ] && cp splash.png resources/splash.png || true
+        npx cordova-res android --skip-config --copy
 
     - name: Set JAVA_HOME for Gradle
       run: |

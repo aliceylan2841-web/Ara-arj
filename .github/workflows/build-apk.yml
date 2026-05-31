@@ -59,7 +59,7 @@ jobs:
         cat > capacitor.config.json << 'JSON'
         {
           "appId": "com.acamay.evsarj",
-          "appName": "Acamay EV Pro",
+          "appName": "Araç Şarj",
           "webDir": "www",
           "android": {
             "allowMixedContent": true,

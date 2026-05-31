@@ -24,9 +24,7 @@ jobs:
         java-version: '17'
 
     - name: Android SDK
-      uses: android-actions/setup-android@v3
-      with:
-        log-accepted-licenses: true
+      uses: android-actions/sdk-starter@v1
 
     - name: Paketleri Kur
       run: |
@@ -41,17 +39,9 @@ jobs:
           @capacitor/assets@3.0.5 \
           --save-exact
 
-    - name: Web Dizini ve Index.html Hazirla
-      run: |
-        mkdir -p www resources
-        if [ ! -f "www/index.html" ]; then
-          echo '<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Acamay EV Pro</title><style>body { background: #111; color: #fff; font-family: sans-serif; text-align: center; padding-top: 50px; }</style></head><body>' > www/index.html
-          echo '<h1>Acamay EV Pro</h1><p>Uygulama basariyla kuruldu.</p>' >> www/index.html
-          echo '</body></html>' >> www/index.html
-        fi
-
+    # Sizin yapınızda index.html ana dizinde olduğu için Capacitor'a '.' (aksa dizin) hedef gösterildi
     - name: Capacitor Init
-      run: npx cap init "Acamay EV Pro" "com.acamay.evsarj" --web-dir=www
+      run: npx cap init "Acamay EV Pro" "com.acamay.evsarj" --web-dir=.
 
     - name: capacitor.config.json Olustur
       run: |
@@ -59,7 +49,7 @@ jobs:
         {
           "appId": "com.acamay.evsarj",
           "appName": "Acamay EV Pro",
-          "webDir": "www",
+          "webDir": ".",
           "android": {
             "allowMixedContent": true,
             "useLegacyBridge": false
@@ -159,56 +149,14 @@ jobs:
         </network-security-config>
         XML
 
-    - name: Modern Logo ve Splash Varliklarini Olustur
+    # Reponuzdaki gerçek icon.png ve splash.png dosyalarını otomatik kullanır
+    - name: Logo ve Splash Varliklarini Enjekte Et
       run: |
         mkdir -p assets
-        python3 -c "
-        import struct, zlib
-        def create_png(width, height, pixels):
-            def write_chunk(chunk_type, data):
-                c = chunk_type + data
-                return struct.pack('>I', len(data)) + c + struct.pack('>I', zlib.crc32(c) & 0xffffffff)
-            ihdr = struct.pack('>II', width, height) + bytes([8,6,0,0,0])
-            png = b'\x89PNG\r\n\x1a\n' + write_chunk(b'IHDR', ihdr)
-            raw2 = b''
-            for row in pixels:
-                raw2 += b'\x00'
-                for r,g,b,a in row:
-                    raw2 += bytes([r,g,b,a])
-            png += write_chunk(b'IDAT', zlib.compress(raw2)) + write_chunk(b'IEND', b'')
-            return png
-        W = 512
-        pixels = []
-        for y in range(W):
-            row = []
-            for x in range(W):
-                dx = x - W//2
-                dy = y - W//2
-                dist = (dx*dx + dy*dy)**0.5
-                if dist < W//2 - 20:
-                    ratio = dist / (W//2)
-                    r = int(0 + ratio * 8)
-                    g = int(184 - ratio * 50)
-                    b2 = int(144 + ratio * 80)
-                    row.append((r, g, b2, 255))
-                elif dist < W//2:
-                    row.append((255,255,255,200))
-                else:
-                    row.append((0,0,0,0))
-            pixels.append(row)
-        for y in range(W):
-            for x in range(W):
-                dx = x - W//2
-                dy = y - W//2
-                if abs(dx) < 60 and abs(dy) < 160:
-                    if dx > -20 and dy < 20:
-                        pixels[y][x] = (255, 255, 255, 255)
-                    elif dx < 20 and dy > -20:
-                        pixels[y][x] = (255, 255, 255, 255)
-        with open('assets/icon-only.png', 'wb') as f:
-            f.write(create_png(W, W, pixels))
-        "
-        cp assets/icon-only.png assets/icon-foreground.png
+        cp icon.png assets/icon-only.png
+        cp icon.png assets/icon-foreground.png
+        cp splash.png assets/splash.png
+        cp splash.png assets/splash-dark.png
         
         python3 -c "
         import struct, zlib
@@ -216,13 +164,10 @@ jobs:
             c = chunk_type + data
             return struct.pack('>I', len(data)) + c + struct.pack('>I', zlib.crc32(c) & 0xffffffff)
         ihdr = struct.pack('>II', 512, 512) + bytes([8,6,0,0,0])
-        pixels = [b'\x00' + bytes([0, 150, 136, 255]*512) for _ in range(512)]
+        pixels = [b'\x00' + bytes([255, 255, 255, 255]*512) for _ in range(512)]
         png = b'\x89PNG\r\n\x1a\n' + write_chunk(b'IHDR', ihdr) + write_chunk(b'IDAT', zlib.compress(b''.join(pixels))) + write_chunk(b'IEND', b'')
         with open('assets/icon-background.png', 'wb') as f: f.write(png)
         "
-        cp assets/icon-only.png assets/splash.png
-        cp assets/icon-only.png assets/splash-dark.png
-        
         npx capacitor-assets generate --android
 
     - name: JAVA_HOME Ayarla

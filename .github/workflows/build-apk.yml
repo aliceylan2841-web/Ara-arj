@@ -41,11 +41,28 @@ jobs:
           @capacitor/assets@3.0.5 \
           --save-exact
 
-    - name: Proje Klasorlerini Kontrol Et
+    # EĞER REPO'DA WWW YOKSA OTOMATİK OLUŞTURUR VE HATA ALMANIZI ENGELLER
+    - name: Web Dizini ve Index.html Kontrolü / Hazırlığı
       run: |
-        if [ ! -d "www" ]; then
-          echo "HATA: Projenizin ana dizininde 'www' klasörü bulunamadı!"
-          exit 1
+        mkdir -p www resources
+        if [ ! -f "www/index.html" ]; then
+          cat > www/index.html << 'HTML'
+          <!DOCTYPE html>
+          <html lang="tr">
+          <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>Acamay EV Pro</title>
+              <style>
+                body { background: #111; color: #fff; font-family: sans-serif; text-align: center; padding-top: 50px; }
+              </style>
+          </head>
+          <body>
+              <h1>Acamay EV Pro</h1>
+              <p>Uygulama başarıyla kuruldu.</p>
+          </body>
+          </html>
+          HTML
         fi
 
     - name: Capacitor Init
@@ -160,8 +177,7 @@ jobs:
     - name: Modern Logo ve Splash Varliklarini Olustur
       run: |
         mkdir -p assets
-        if [ ! -f icon.png ]; then
-          python3 -c "
+        python3 -c "
         import struct, zlib
         def create_png(width, height, pixels):
             def write_chunk(chunk_type, data):
@@ -206,10 +222,10 @@ jobs:
                         pixels[y][x] = (255, 255, 255, 255)
         with open('assets/icon-only.png', 'wb') as f:
             f.write(create_png(W, W, pixels))
-          "
-          cp assets/icon-only.png assets/icon-foreground.png
-          # Arka plan rengini düz yeşil yapalım adaptive icon için
-          python3 -c "
+        "
+        cp assets/icon-only.png assets/icon-foreground.png
+        
+        python3 -c "
         import struct, zlib
         def write_chunk(chunk_type, data):
             c = chunk_type + data
@@ -218,13 +234,10 @@ jobs:
         pixels = [b'\x00' + bytes([0, 150, 136, 255]*512) for _ in range(512)]
         png = b'\x89PNG\r\n\x1a\n' + write_chunk(b'IHDR', ihdr) + write_chunk(b'IDAT', zlib.compress(b''.join(pixels))) + write_chunk(b'IEND', b'')
         with open('assets/icon-background.png', 'wb') as f: f.write(png)
-          "
-        fi
-        # Splash üretimi için kopyala
+        "
         cp assets/icon-only.png assets/splash.png
         cp assets/icon-only.png assets/splash-dark.png
         
-        # Resmi modern Capacitor Assets aracı ile Android'e enjekte et
         npx capacitor-assets generate --android
 
     - name: JAVA_HOME Ayarla

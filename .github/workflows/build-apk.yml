@@ -23,7 +23,6 @@ jobs:
         distribution: 'zulu'
         java-version: '17'
 
-    # Düzenlendi: Eski hata veren paket yerine kararlı resmi paket geri getirildi
     - name: Android SDK
       uses: android-actions/setup-android@v3
       with:
@@ -42,8 +41,18 @@ jobs:
           @capacitor/assets@3.0.5 \
           --save-exact
 
+    # KESİN ÇÖZÜM: Ana dizindeki index.html dosyanızı standart 'www' klasörüne taşır
+    - name: Web Dizini Hazirla ve Dosyalari Tasi
+      run: |
+        mkdir -p www assets
+        cp index.html www/index.html
+        [ -f icon.png ] && cp icon.png assets/icon-only.png || echo "icon yok"
+        [ -f icon.png ] && cp icon.png assets/icon-foreground.png || echo "icon yok"
+        [ -f splash.png ] && cp splash.png assets/splash.png || echo "splash yok"
+        [ -f splash.png ] && cp splash.png assets/splash-dark.png || echo "splash yok"
+
     - name: Capacitor Init
-      run: npx cap init "Acamay EV Pro" "com.acamay.evsarj" --web-dir=.
+      run: npx cap init "Acamay EV Pro" "com.acamay.evsarj" --web-dir=www
 
     - name: capacitor.config.json Olustur
       run: |
@@ -51,7 +60,7 @@ jobs:
         {
           "appId": "com.acamay.evsarj",
           "appName": "Acamay EV Pro",
-          "webDir": ".",
+          "webDir": "www",
           "android": {
             "allowMixedContent": true,
             "useLegacyBridge": false
@@ -153,12 +162,6 @@ jobs:
 
     - name: Logo ve Splash Varliklarini Enjekte Et
       run: |
-        mkdir -p assets
-        cp icon.png assets/icon-only.png
-        cp icon.png assets/icon-foreground.png
-        cp splash.png assets/splash.png
-        cp splash.png assets/splash-dark.png
-        
         python3 -c "
         import struct, zlib
         def write_chunk(chunk_type, data):

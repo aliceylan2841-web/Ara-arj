@@ -41,28 +41,13 @@ jobs:
           @capacitor/assets@3.0.5 \
           --save-exact
 
-    # EĞER REPO'DA WWW YOKSA OTOMATİK OLUŞTURUR VE HATA ALMANIZI ENGELLER
-    - name: Web Dizini ve Index.html Kontrolü / Hazırlığı
+    - name: Web Dizini ve Index.html Hazirla
       run: |
         mkdir -p www resources
         if [ ! -f "www/index.html" ]; then
-          cat > www/index.html << 'HTML'
-          <!DOCTYPE html>
-          <html lang="tr">
-          <head>
-              <meta charset="UTF-8">
-              <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              <title>Acamay EV Pro</title>
-              <style>
-                body { background: #111; color: #fff; font-family: sans-serif; text-align: center; padding-top: 50px; }
-              </style>
-          </head>
-          <body>
-              <h1>Acamay EV Pro</h1>
-              <p>Uygulama başarıyla kuruldu.</p>
-          </body>
-          </html>
-          HTML
+          echo '<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Acamay EV Pro</title><style>body { background: #111; color: #fff; font-family: sans-serif; text-align: center; padding-top: 50px; }</style></head><body>' > www/index.html
+          echo '<h1>Acamay EV Pro</h1><p>Uygulama basariyla kuruldu.</p>' >> www/index.html
+          echo '</body></html>' >> www/index.html
         fi
 
     - name: Capacitor Init
